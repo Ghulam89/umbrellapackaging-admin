@@ -1,0 +1,53 @@
+.main_title{
+    @apply  text-black text-2xl font-medium
+}
+
+.param{
+
+    @apply text-white text-sm  font-medium
+}
+
+
+.sidebar ul {
+    overflow-y: auto;
+    height: calc(100vh - 100px) !important; /* Adjust height as needed */
+  }
+
+/* Scrollbar Styling */
+.overflow-x-auto::-webkit-scrollbar {
+    width: 5px;
+    display: none ;
+}
+ 
+.overflow-x-auto::-webkit-scrollbar-track {
+    background-color: #8B0100;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #BC0000; 
+}
+
+
+
+.card-container {
+    text-align: center;
+    border: 1px solid  gainsboro;
+    border-radius:12px;
+    max-width:500px;
+    margin: 0 auto;
+    padding: 1rem;
+    background-color: #fff;
+  }
+
+  .card-container .tracking{
+    color: black !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    padding:7px 0px;
+  }
