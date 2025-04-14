@@ -17,7 +17,7 @@ const News = () => {
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(currentPage);
+  const [limit] = useState(10);
   const [search, setSearch] = useState("");
   useEffect(() => {
     fetchSizes();
@@ -25,10 +25,10 @@ const News = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/blog/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/blog/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         setUsers(res.data.data);
-        setTotalPages(res.data.totalPages);
+        setTotalPages(res?.data?.pagination?.totalPages);
       })
       .catch((error) => {
         console.log(error);
@@ -124,7 +124,7 @@ const News = () => {
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.name}
+                        {item.title}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">

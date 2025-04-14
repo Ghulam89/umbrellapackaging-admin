@@ -1,14 +1,12 @@
 import React, { useRef } from 'react';
 import { Line } from 'react-chartjs-2';
-import { Chart, registerables } from 'chart.js'; // Import Chart.js components
+import { Chart, registerables } from 'chart.js';
 
-// Register the necessary components
 Chart.register(...registerables);
 
 const LineChart = () => {
   const chartRef = useRef(null);
 
-  // Define your data for the line chart
   const data = {
     labels: [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
@@ -21,30 +19,30 @@ const LineChart = () => {
         borderColor: '#5A56E9',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         fill: true,
-        tension: 0.3, // Smooth the line
-        pointRadius: 5, // Adjust point size
-        pointHoverRadius: 7, // Hover effect
+        tension: 0.3, 
+        pointRadius: 5, 
+        pointHoverRadius: 7, 
       },
     ],
   };
 
   const options = {
-    maintainAspectRatio: false, // Allow the chart to resize
+    maintainAspectRatio: false,
     scales: {
       x: {
         grid: {
-          display: false, // Hide horizontal grid lines (X-axis)
+          display: false,
         },
       },
       y: {
         grid: {
-          display: true, // Show vertical grid lines (Y-axis)
+          display: true,
         },
       },
     },
     plugins: {
       datalabels: {
-        display: false, // Disable datalabels (optional)
+        display: false, 
       },
     },
   };

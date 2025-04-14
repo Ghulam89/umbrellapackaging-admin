@@ -18,9 +18,9 @@ const BarChart = () => {
       {
         label: 'Monthly Data',
         data: [23, 32, 44, 45, 50, 5, 60, 65, 70, 75, 80, 100, 140],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)', // Bar color
-        borderColor: '#5A56E9', // Border color
-        borderWidth: 1, // Border width of the bars
+        backgroundColor: 'rgba(75, 192, 192, 0.6)', 
+        borderColor: '#5A56E9',
+        borderWidth: 1,
       },
     ],
   };

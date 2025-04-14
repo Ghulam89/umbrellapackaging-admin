@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Wrapper from "../Wrapper";
 import Button from "../../components/Button";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -27,10 +26,10 @@ const SubCategory = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/subCategory/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/category/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         setUsers(res.data.data);
-        setTotalPages(res.data.totalPages);
+        setTotalPages(res.data.pagination.totalPages);
       })
       .catch((error) => {
         console.log(error);
@@ -60,9 +59,9 @@ const SubCategory = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${Base_url}/subCategory/delete/${id}`)
+          .delete(`${Base_url}/category/delete/${id}`)
           .then((res) => {
-            if (res.status === 200) {
+            if (res.data.status === "success") {
               Swal.fire("Deleted!", "Your file has been deleted.", "success");
               fetchSizes();
             }
@@ -87,7 +86,7 @@ const SubCategory = () => {
             setIsUpdateOpen(true);
           }}
         />
-        <Button  onClick={()=>setIsUploadOpen(true)} label={'Upload CSV'} className={' bg-black text-white'} />
+       
        </div>
       </div>
 
@@ -117,7 +116,8 @@ const SubCategory = () => {
               <thead className="bg-primary rounded-lg">
                 <tr>
                   <th className="text-sm text-white font-bold px-6 py-4">No</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Name</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Category Name</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Title</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Image</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Action</th>
                 </tr>
@@ -130,7 +130,12 @@ const SubCategory = () => {
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.name}
+                        {item?.brandId?.name}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {item?.title}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
@@ -146,7 +151,7 @@ const SubCategory = () => {
                           className="cursor-pointer"
                         />
                         <img
-                          onClick={() => removeFunction(item.id)}
+                          onClick={() => removeFunction(item._id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
                           className="cursor-pointer"

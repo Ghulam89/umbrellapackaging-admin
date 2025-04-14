@@ -6,94 +6,67 @@ import Modal from "../../components/modal";
 import { MdClose } from "react-icons/md";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const AddNews = ({
   isModalOpen,
   setIsModalOpen,
   closeModal,
-  fetchSizes,
+  fetchBlogs,
   isEditMode = false,
   editData = {},
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState(editData?.name || "");
-  const [subTitle, setSubTitle] = useState(editData?.subTitle || "");
-  const [descr, setDescr] = useState(editData?.descr || "");
-  const [image, setImage] = useState( editData?.image || null);
-
-
-  const [allCategories,setAllCategories] = useState([])
-
-  const [blogs,setBlogs] = useState(editData?.blogCategoryId || "")
-
-
-  useEffect(()=>{
-    const fetchAllCategories = async () => {
-      let allCategories = [];
-      let currentPage = 1;
-      let totalPages = 1;
-
-      try {
-        while (currentPage <= totalPages) {
-          const response = await axios.get(`${Base_url}/blogCategory/get`, {
-            params: { page: currentPage, limit: 20 },
-          });
-
-          const { data, totalPages: apiTotalPages } = response.data;
-
-          allCategories = [...allCategories, ...data];
-          totalPages = apiTotalPages;
-          currentPage++;
-        }
-
-        setAllCategories(allCategories);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    };
-
-    fetchAllCategories();
-  },[])
-
-  
+  const [title, setTitle] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
+  const [content, setContent] = useState("");
+  const [image, setImage] = useState(null);
+  const [status, setStatus] = useState("pending");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   useEffect(() => {
-    if (isEditMode) {
-      setName(editData?.name || "");
-      setSubTitle(editData?.subTitle || "");
-      setBlogs(editData?.blogCategoryId || "")
-      setDescr(editData?.descr || "");
-      setImage(editData?.image || null); // Reset image when in edit mode
+    if (isEditMode && editData) {
+      setTitle(editData.title || "");
+      setShortDescription(editData.shortDescription || "");
+      setContent(editData.content || "");
+      setImage(editData.image || null);
+      setStatus(editData.status || "pending");
+      setSelectedCategory(editData.category || "");
     }
   }, [isEditMode, editData]);
 
-
   const resetState = () => {
-    setName("");
-    setSubTitle("")
-    setDescr("");
-    setImage(null)
+    setTitle("");
+    setShortDescription("");
+    setContent("");
+    setImage(null);
+    setStatus("pending");
+    setSelectedCategory("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name.trim() || !subTitle.trim() || !descr.trim()) {
-      toast.error("All fields are required!");
+    if (!title.trim() || !shortDescription.trim() || !content.trim()) {
+      toast.error("Title, short description and content are required!");
       return;
     }
 
     if (!image && !isEditMode) {
-      toast.error("Image is required!");
+      toast.error("Featured image is required!");
       return;
     }
 
     setIsLoading(true);
     const formData = new FormData();
-    formData.append("name", name);
-    formData.append("blogCategoryId", blogs);
-    formData.append("subTitle", subTitle);
-    formData.append("descr", descr);
-    if (image) {
+    formData.append("title", title);
+    formData.append("shortDescription", shortDescription);
+    formData.append("content", content);
+    formData.append("status", status);
+    formData.append("category", selectedCategory);
+    
+    if (image && typeof image !== 'string') {
       formData.append("image", image);
     }
 
@@ -101,7 +74,7 @@ const AddNews = ({
       const response = await axios({
         method: isEditMode ? "PUT" : "POST",
         url: isEditMode
-          ? `${Base_url}/blog/update/${editData.id}`
+          ? `${Base_url}/blog/update/${editData._id}`
           : `${Base_url}/blog/create`,
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
@@ -109,30 +82,52 @@ const AddNews = ({
 
       if (response?.status === 200) {
         setIsModalOpen(false);
-        toast.success(response.data.message || "Blog saved successfully!");
-        fetchSizes();
+        toast.success(response.data.message);
+        fetchBlogs();
         resetState();
       } else {
-        toast.error(response.data.message || "Failed to save Blog.");
+        toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "An error occurred.");
+      toast.error(error.response?.data?.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'image',
+    'color', 'background',
+    'align'
+  ];
+
   return (
-    <Modal isOpen={isModalOpen} onClose={closeModal}>
-      <div>
-        <div className="p-3 flex justify-between items-center">
+    <Modal isOpen={isModalOpen} onClose={closeModal} className={'rounded-md'}>
+      <div className="max-h-[80vh] overflow-y-auto">
+        <div className="p-3 flex justify-between items-center sticky top-0 bg-white z-10">
           <div></div>
-          <h1 className="capitalize h4 font-semibold">
-            {isEditMode ? "Edit Blogs" : "Add Blogs"}
+          <h1 className="capitalize text-xl font-semibold">
+            {isEditMode ? "Edit Blog Post" : "Create New Blog Post"}
           </h1>
           <MdClose
-            className="cursor-pointer"
-            onClick={() => {setIsModalOpen(false)
+            className="cursor-pointer hover:text-red-500"
+            onClick={() => {
+              setIsModalOpen(false);
               resetState();
             }}
             size={25}
@@ -141,100 +136,113 @@ const AddNews = ({
         <hr />
         <div className="p-5">
           <form onSubmit={handleSubmit}>
-            <div className="flex gap-5 flex-wrap">
-
-            <div className=" w-full">
-                                <label className="block mb-2 text-sm font-medium text-gray-900">
-                                   Blog Categories
-                                </label>
-                                <select
-                                 value={blogs}
-                                 onChange={(e) => setBlogs(e.target.value)}
-                                  name="blogCategoryId"
-                                  className="outline-none bg-lightGray w-full border p-2.5 text-black placeholder:text-black rounded-md"
-                                >
-                                  <option value="" label="Select  categories" />
-                                  {allCategories.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                      {item.name}
-                                    </option>
-                                  ))}
-                                </select>
-                                
-                              </div>
-              <div className="w-[100%]">
+            <div className="space-y-4">
+              <div>
                 <Input
-                  label={"Name"}
-                  name={"name"}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={"border w-full py-3"}
-                  defaultValue={name}
+                  label="Title*"
+                  name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="border w-full p-3 rounded-md"
+                  placeholder="Enter blog title"
+                  required
                 />
               </div>
 
-              <div className="w-[100%]">
+              <div>
                 <Input
-                  label={"Sub Title"}
-                  name={"subTitle"}
-                  value={subTitle}
-                  onChange={(e) => setSubTitle(e.target.value)}
-                  className={"border w-full py-3"}
-                  defaultValue={subTitle}
+                  label="Short Description*"
+                  name="shortDescription"
+                  value={shortDescription}
+                  onChange={(e) => setShortDescription(e.target.value)}
+                  className="border w-full p-3 rounded-md"
+                  placeholder="A brief summary of your blog post"
+                  required
                 />
               </div>
-              <div className="w-[100%]">
-                <label className="block mb-2 font-semibold">Description</label>
-                <textarea
-                  name="descr"
-                  value={descr}
-                  onChange={(e) => setDescr(e.target.value)}
-                  className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
-                />
-              </div>
-              <div className="w-[100%]">
-                <label className="block mb-2 font-semibold">Image</label>
+
+           
+
+           
+
+              <div>
+                <label className="block mb-2 font-medium">
+                   Image*
+                  {!isEditMode && (
+                    <span className="text-xs text-gray-500 ml-1">(required)</span>
+                  )}
+                </label>
                 {image ? (
-                  <div className="mb-3 border rounded-md">
+                  <div className="mb-3 border rounded-md overflow-hidden">
                     <img
                       src={
                         typeof image === "string"
-                          ? image 
+                          ? image
                           : URL.createObjectURL(image)
                       }
-                      alt="Selected"
-                      className="w-full h-40 object-cover rounded-md"
+                      alt="Featured preview"
+                      className="w-full h-48 object-cover"
                     />
-
-                    {/* <button
+                    <button
                       type="button"
-                      onClick={() => setImage(null)} 
-                      className="mt-2 text-red-500 underline"
+                      onClick={() => setImage(null)}
+                      className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-sm"
                     >
-                      Remove Image
-                    </button> */}
+                      Change Image
+                    </button>
                   </div>
                 ) : (
-                  <p className="mb-3 text-sm text-gray-500">
-                    No image selected
-                  </p>
+                  <div className="border-2 border-dashed rounded-md p-4 text-center">
+                    <p className="text-gray-500 mb-2">No image selected</p>
+                    <label className="cursor-pointer bg-blue-50 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-100">
+                      Select Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImage(e.target.files[0])}
+                        className="hidden"
+                        required={!isEditMode}
+                      />
+                    </label>
+                  </div>
                 )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setImage(e.target.files[0])}
-                  className="border w-full  py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
+                <p className="text-xs text-gray-500 mt-1">
+                  Recommended size: 1200x630 pixels (JPG or PNG)
+                </p>
+              </div>
+
+              <div>
+                <label className="block mb-2 font-medium">Content*</label>
+                <ReactQuill
+                  theme="snow"
+                  value={content}
+                  onChange={setContent}
+                  modules={modules}
+                  formats={formats}
+                  className="bg-white rounded-md"
+                  placeholder="Write your blog content here..."
                 />
               </div>
             </div>
+
             <Button
-              label={isLoading ? "Loading..." : isEditMode ? "Update" : "Add"}
-              type={"submit"}
+            label={isLoading ? (
+              "Processing..."
+            ) : isEditMode ? (
+              "Update Blog Post"
+            ) : (
+              "Publish Blog Post"
+            )}
+              type="submit"
               disabled={isLoading}
-              className={`bg-primary mt-3 uppercase text-white py-2 w-full ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            />
+              className={`mt-6 w-full py-3 rounded-md ${
+                isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : " bg-primary hover:bg-blue-700"
+              } text-white font-medium`}
+            >
+             
+            </Button>
           </form>
         </div>
       </div>

@@ -20,7 +20,7 @@ const Categories = () => {
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(15);
+  const [limit] = useState(4);
   const [search, setSearch] = useState("");
   useEffect(() => {
     fetchSizes();
@@ -31,12 +31,12 @@ const Categories = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/category/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/brands/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         console.log(res);
         
         setUsers(res.data.data);
-        setTotalPages(res.data.totalPages);
+        setTotalPages(res.data.pagination.totalPages);
       })
       .catch((error) => {
         console.log(error);
@@ -66,9 +66,9 @@ const Categories = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${Base_url}/category/delete/${id}`)
+          .delete(`${Base_url}/brands/delete/${id}`)
           .then((res) => {
-            if (res.status === 200) {
+            if (res.data.status ==="success") {
               Swal.fire("Deleted!", "Your file has been deleted.", "success");
               fetchSizes();
             }
@@ -93,19 +93,16 @@ const Categories = () => {
             setIsUpdateOpen(true);
           }}
         />
-        {/* <Button onClick={()=>setIsUploadOpen(true)} className={' bg-black text-white'} label={'Upload CSV'} /> */}
+     
         </div>
       </div>
 
       <UploadCSV setIsModalOpen={setIsUploadOpen} isModalOpen={isUploadOpen} />
-
-      
       <AddCategories isModalOpen={isUpdateOpen}
         setIsModalOpen={setIsUpdateOpen}
         isEditMode={!!editData}
         editData={editData}
         fetchSizes={fetchSizes}
-        
         />
 
       <div className="my-4">
@@ -153,7 +150,7 @@ const Categories = () => {
                           className="cursor-pointer"
                         />
                         <img
-                          onClick={() => removeFunction(item.id)}
+                          onClick={() => removeFunction(item._id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
                           className="cursor-pointer"

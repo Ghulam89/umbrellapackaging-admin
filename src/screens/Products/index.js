@@ -8,7 +8,6 @@ import { FaSearch } from "react-icons/fa";
 import Input from "../../components/Input";
 import { Link } from "react-router-dom";
 import UploadCSV from "./UploadCSV";
-// import AddSliders from "./AddSliders";
 const Sliders = () => {
     const [users, setUsers] = useState([]);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -28,7 +27,7 @@ const Sliders = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/product/getAdmin?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/products/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         console.log(res);
         
@@ -89,10 +88,6 @@ const Sliders = () => {
           
         />
         </Link>
-
-
-        <Button  onClick={()=>setIsUploadOpen(true)} label={'Upload CSV'} className={''} />
-        
         </div>
       </div>
 
@@ -115,10 +110,8 @@ const Sliders = () => {
                 <tr>
                   <th className="text-sm text-white font-bold px-6 py-4">No</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Name</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Brand</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Category</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Sub Category</th>
-                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Sub Sub Category</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Image</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Action</th>
                 </tr>
@@ -131,31 +124,22 @@ const Sliders = () => {
                     </td>
                     <td className="text-sm wh font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.name}
+                        {item.title}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.brand?.name}
+                        {item.brandId?.name}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.category?.name}
+                        {item.categoryId?.title}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.subCategory?.name}
-                      </span>
-                    </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.subSubCategory?.name}
-                      </span>
-                    </td>
+                    
                     <td className="text-sm font-normal whitespace-nowrap px-4 py-4">
-                      <img src={item?.Image1}  className=" rounded-md w-20 h-16 mx-auto" alt="" />
+                      <img src={item?.images[0]}  className=" rounded-md w-20 h-16 mx-auto" alt="" />
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center  w-full items-center">

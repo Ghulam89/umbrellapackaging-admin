@@ -24,26 +24,20 @@ const AdminLogin = () => {
       setError("");
       try {
         const response = await axios.post(
-          `${Base_url}/supplier/login`,
+          `${Base_url}/admin/login`,
           values
         );
-
-
-        console.log(response.data);
-        
-
-        if (response.data.status === 'ok') {
+        if (response.data.status === 'success') {
           const { token, data } = response.data;
           // localStorage.setItem("token", token);
           localStorage.setItem("shopzone_admin", JSON.stringify(data));
-
-          navigate('dashboard')
+          navigate('/dashboard')
           toast.success(response.data.message)
         } else {
-          setError(response.data.message || "Login failed");
+          setError(response.data.message);
         }
       } catch (err) {
-        setError(err.response?.data?.message || "An error occurred");
+        setError(err.response?.data?.message);
       } finally {
         setLoading(false);
       }
@@ -64,7 +58,7 @@ const AdminLogin = () => {
           </div>
 
           {error && (
-            <div className="text-red-500 text-center mb-3 font-semibold">
+            <div className="text-red-500 bg-red-100 py-1 rounded-md border border-red-500 text-center mb-3 font-semibold">
               {error}
             </div>
           )}
