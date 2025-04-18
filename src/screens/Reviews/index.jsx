@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from "react";
-import Wrapper from "../Wrapper";
-import Button from "../../components/Button";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { Base_url } from "../../utils/Base_url";
 import { FaSearch } from "react-icons/fa";
 import Input from "../../components/Input";
-import AddGenders from "./AddGenders";
-
-const Genders = () => {
-    const [users, setUsers] = useState([]);
+import { Link } from "react-router-dom";
+const Reviews = () => {
+  const [users, setUsers] = useState([]);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const handleEdit = (item) => {
@@ -18,7 +15,7 @@ const Genders = () => {
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(currentPage);
+  const [limit] = useState(15);
   const [search, setSearch] = useState("");
   useEffect(() => {
     fetchSizes();
@@ -26,7 +23,9 @@ const Genders = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/gender/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(
+        `${Base_url}/user/get?page=${currentPage}&limit=${limit}&search=${search}`
+      )
       .then((res) => {
         setUsers(res.data.data);
         setTotalPages(res.data.totalPages);
@@ -59,7 +58,7 @@ const Genders = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${Base_url}/gender/delete/${id}`)
+          .delete(`${Base_url}/user/delete/${id}`)
           .then((res) => {
             if (res.status === 200) {
               Swal.fire("Deleted!", "Your file has been deleted.", "success");
@@ -75,26 +74,9 @@ const Genders = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center">
-        <h2 className="main_title">Gender</h2>
-        <Button
-          className="bg-primary py-2.5"
-          label="Add Gender"
-          onClick={() => {
-            setEditData(null);
-            setIsUpdateOpen(true);
-          }}
-        />
+    <div className="flex justify-between items-center">
+        <h2 className="main_title">Reviews</h2>
       </div>
-
-      
-      <AddGenders  isModalOpen={isUpdateOpen}
-        setIsModalOpen={setIsUpdateOpen}
-        isEditMode={!!editData}
-        editData={editData}
-        fetchSizes={fetchSizes}
-        
-        />
 
       <div className="my-4">
         <Input
@@ -112,8 +94,18 @@ const Genders = () => {
               <thead className="bg-primary rounded-lg">
                 <tr>
                   <th className="text-sm text-white font-bold px-6 py-4">No</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Name</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Action</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">
+                    Name
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4">
+                    Email
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4">
+                    Phone
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -124,18 +116,30 @@ const Genders = () => {
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.name}
+                        {item.username}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {item.email}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {item.phone}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center items-center">
+                        <Link to={`/customer/${item?.id}`}>
                         <img
-                             onClick={() => handleEdit(item)}
-
+                          
                           src={require("../../assets/image/edit.png")}
                           alt="Edit"
                           className="cursor-pointer"
                         />
+                        </Link>
+                        
                         <img
                           onClick={() => removeFunction(item.id)}
                           src={require("../../assets/image/del.png")}
@@ -180,7 +184,6 @@ const Genders = () => {
                 Next
               </button>
             </div>
-
           </div>
         </div>
       </section>
@@ -188,4 +191,4 @@ const Genders = () => {
   );
 };
 
-export default Genders;
+export default Reviews;

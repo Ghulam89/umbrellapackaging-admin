@@ -6,6 +6,7 @@ import Modal from "../../components/modal";
 import { MdClose } from "react-icons/md";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
+import { AsyncPaginate } from "react-select-async-paginate";
 
 const AddSubCategory = ({
   isModalOpen,
@@ -16,95 +17,152 @@ const AddSubCategory = ({
   editData = {},
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [imgType, setImgType] = useState('url');
-  const [name, setName] = useState(editData?.name || "");
-  const [categories, setCategories] = useState(editData?.categoryId || "");
-  const [image, setImage] = useState(editData?.image || null);
+  const [brandId, setBrandId] = useState("");
+  const [title, setTitle] = useState("");
+  const [subTitle, setSubTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState(null);
+  const [iconPreview, setIconPreview] = useState("");
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [videoLink, setVideoLink] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState(null);
 
-  const [allCategories, setAllCategories] = useState([])
+  const loadOptions = async (searchQuery, loadedOptions, { page }) => {
+    try {
+      const response = await axios.get(`${Base_url}/brands/getAll`, {
+        params: { page, limit: 20, search: searchQuery || "" },
+      });
 
+      const { data, totalPages } = response.data;
+      
+      return {
+        options: data.map((item) => ({ 
+          label: item.name, 
+          value: item._id,
+        })),
+        hasMore: page < totalPages,
+        additional: {
+          page: page + 1,
+        },
+      };
+    } catch (error) {
+      return {
+        options: [],
+        hasMore: false,
+        additional: {
+          page: page,
+        },
+      };
+    }
+  };
+
+  const handleBrandChange = (selectedOption) => {
+    setSelectedBrand(selectedOption);
+    setBrandId(selectedOption?.value || "");
+  };
 
   useEffect(() => {
-    const fetchAllCategories = async () => {
-      let allCategories = [];
-      let currentPage = 1;
-      let totalPages = 1;
-
-      try {
-        while (currentPage <= totalPages) {
-          const response = await axios.get(`${Base_url}/category/get`, {
-            params: { page: currentPage, limit: 20 },
-          });
-
-          const { data, totalPages: apiTotalPages } = response.data;
-
-          allCategories = [...allCategories, ...data];
-          totalPages = apiTotalPages;
-          currentPage++;
-        }
-
-        setAllCategories(allCategories);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
+    if (isEditMode && editData) {
+      setBrandId(editData?.brandId?._id || "");
+      setTitle(editData?.title || "");
+      setSubTitle(editData?.subTitle || "");
+      setDescription(editData?.description || "");
+      setVideoLink(editData?.videoLink || "");
+      
+      if (editData?.icon) {
+        setIconPreview(editData.icon);
       }
-    };
-
-    fetchAllCategories();
-  }, [])
-
-  useEffect(() => {
-    if (isEditMode) {
-      setName(editData?.name || "");
-      setCategories(editData?.categoryId || "")
-      setImage(editData?.image || null);
+      if (editData?.image) {
+        setImagePreview(editData.image);
+      }
+      
+      if (editData?.brandId?._id) {
+        setSelectedBrand({ 
+          label: editData?.brand?.name, 
+          value: editData.brandId?._id,
+        });
+      }
+    } else {
+      resetState();
     }
   }, [isEditMode, editData]);
 
   const resetState = () => {
-    setName("");
-    setCategories("")
+    setBrandId("");
+    setTitle("");
+    setSubTitle("");
+    setDescription("");
+    setIcon(null);
     setImage(null);
+    setIconPreview("");
+    setImagePreview("");
+    setVideoLink("");
+    setSelectedBrand(null);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleIconChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setIcon(file);
+      setIconPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!name.trim()) {
-      toast.error("Name is required!");
-      return;
-    }
-
-    if (!image && !isEditMode) {
-      toast.error("Image is required!");
+    if (!brandId && !isEditMode) {
+      toast.error("Brand is required!");
       return;
     }
 
     setIsLoading(true);
     const formData = new FormData();
-    formData.append("name", name);
-    formData.append("imgType", imgType);
-    formData.append("categoryId", categories);
+    if (brandId) {
+      formData.append("brandId", brandId);
+    }
+    
+    formData.append("title", title);
+    formData.append("subTitle", subTitle);
+    formData.append("description", description);
+    formData.append("videoLink", videoLink);
     if (image) {
       formData.append("image", image);
     }
+    if (icon) {
+      formData.append("icon", icon);
+    }
 
     try {
+      const url = isEditMode 
+        ? `${Base_url}/category/update/${editData._id}`
+        : `${Base_url}/category/create`;
+      
+      const method = isEditMode ? "PUT" : "POST";
+
       const response = await axios({
-        method: isEditMode ? "PUT" : "POST",
-        url: isEditMode
-          ? `${Base_url}/subCategory/update/${editData.id}`
-          : `${Base_url}/subCategory/create`,
+        method,
+        url,
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (response?.status === 200) {
         setIsModalOpen(false);
-        toast.success(response.data.message || "Category saved successfully!");
+        toast.success(response.data.message || 
+          (isEditMode ? "Category updated successfully!" : "Category created successfully!"));
         fetchSizes();
         resetState();
       } else {
-        toast.error(response.data.message || "Failed to save Category.");
+        toast.error(response.data.message || "Operation failed.");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred.");
@@ -114,18 +172,18 @@ const AddSubCategory = ({
   };
 
   return (
-    <Modal isOpen={isModalOpen} onClose={closeModal}>
-      <div>
-        <div className="p-3 flex justify-between items-center">
+    <Modal isOpen={isModalOpen} onClose={closeModal} className={'rounded-md'}>
+      <div className="max-h-[80vh] overflow-y-auto">
+        <div className="p-3 flex justify-between items-center sticky top-0 bg-white z-10">
           <div></div>
           <h1 className="capitalize h4 font-semibold">
             {isEditMode ? "Edit Sub Category" : "Add Sub Category"}
           </h1>
           <MdClose
-            className=" cursor-pointer"
+            className="cursor-pointer"
             onClick={() => {
-              setIsModalOpen(false)
-              resetState()
+              setIsModalOpen(false);
+              resetState();
             }}
             size={25}
           />
@@ -134,112 +192,120 @@ const AddSubCategory = ({
         <div className="p-5">
           <form onSubmit={handleSubmit}>
             <div className="flex gap-5 flex-wrap">
-              {/* Category Select */}
-              <div className=" w-full">
+              <div className="w-full">
                 <label className="block mb-2 text-sm font-medium text-gray-900">
-                  Categories
+                  Category*
                 </label>
-                <select
-                  value={categories}
-                  onChange={(e) => setCategories(e.target.value)}
-                  name="categories"
-                  className="outline-none bg-lightGray w-full border p-2.5 text-black placeholder:text-black rounded-md"
-                >
-                  <option value="" label="Select  categories" />
-                  {allCategories.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-
-              </div>
-              <div className="w-[100%]">
-                <Input
-                  label={"Name"}
-                  name={"name"}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={"border w-full py-3"}
-                  defaultValue={name}
+                <AsyncPaginate
+                  value={selectedBrand}
+                  loadOptions={loadOptions}
+                  onChange={handleBrandChange}
+                  getOptionLabel={(option) => option.label}
+                  getOptionValue={(option) => option.value}
+                  placeholder="Select a category..."
+                  additional={{ page: 1 }}
+                  classNamePrefix="react-select"
                 />
               </div>
 
-              <div className="w-[100%]">
-              <label className="block mb-2 font-semibold">Select Image Type</label>
-              <div className="w-100 flex flex-row justify-start items-center gap-10">
-                <div className="flex flex-row justify-start items-center gap-3 cursor-pointer" onClick={()=>{
-                  setImgType('url')
-                }}>
-                  <div className={`w-3 h-3 rounded-full p-1  ${imgType==='url'?'border-[6px] border-black':'border-[6px]'}`}/>
-                  <p>Upload URL</p>
-                </div>
-
-                <div className="flex flex-row justify-start items-center gap-3 cursor-pointer" onClick={()=>{
-                  setImgType('file')
-                }}>
-                  <div className={`w-3 h-3 rounded-full p-1  ${imgType==='file'?'border-[6px] border-black':'border-[6px]'}`}/>
-                  <p>Upload From Gallery</p>
-                </div>
-              </div>
-
-              </div>
-
-
-              {imgType==='url'?<div className="w-[100%]">
+              <div className="w-full">
                 <Input
-                  label={"Image Url"}
-                  name={"image"}
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
+                  label={"Title*"}
+                  name={"title"}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   className={"border w-full py-3"}
-                  defaultValue={image}
+                  defaultValue={editData?.title}
+                  required={true}
                 />
               </div>
-:
 
-              <div className="w-[100%]">
+              <div className="w-full">
+                <Input
+                  label={"Sub Title"}
+                  name={"subTitle"}
+                  value={subTitle}
+                  onChange={(e) => setSubTitle(e.target.value)}
+                  className={"border w-full py-3"}
+                  defaultValue={editData?.subTitle}
+                  required={true}
+                />
+              </div>
+              <div className="w-full">
                 <label className="block mb-2 font-semibold">Image</label>
-                {image ? (
+                {(imagePreview || image) ? (
                   <div className="mb-3 border rounded-md">
                     <img
-                      src={
-                        typeof image === "string"
-                          ? image
-                          : URL.createObjectURL(image)
-                      }
+                      src={imagePreview || (typeof image === 'string' ? image : URL.createObjectURL(image))}
                       alt="Selected"
                       className="w-full h-40 object-cover rounded-md"
                     />
-
-                    {/* <button
-                      type="button"
-                      onClick={() => setImage(null)} 
-                      className="mt-2 text-red-500 underline"
-                    >
-                      Remove Image
-                    </button> */}
                   </div>
                 ) : (
-                  <p className="mb-3 text-sm text-gray-500">
-                    No image selected
-                  </p>
+                  <p className="mb-3 text-sm text-gray-500">No image selected</p>
                 )}
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImage(e.target.files[0])}
-                  className="border w-full  py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
+                  onChange={handleImageChange}
+                  className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
                 />
-              </div>}
+              </div>
 
+              <div className="w-full">
+                <label className="block mb-2 font-semibold">Icon</label>
+                {(iconPreview || icon) ? (
+                  <div className="mb-3 border rounded-md">
+                    <img
+                      src={iconPreview || (typeof icon === 'string' ? icon : URL.createObjectURL(icon))}
+                      alt="Selected Icon"
+                      className="w-full h-40 object-cover rounded-md"
+                    />
+                  </div>
+                ) : (
+                  <p className="mb-3 text-sm text-gray-500">No icon selected</p>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleIconChange}
+                  className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
+                />
+              </div>
+
+              <div className="w-full">
+                <label className="block mb-2 text-sm font-medium text-gray-900">
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="border w-full p-3 rounded-md"
+                  rows="3"
+                  required={true}
+                />
+              </div>
+
+              <div className="w-full">
+                <Input
+                  label={"Video Link"}
+                  name={"videoLink"}
+                  value={videoLink}
+                  onChange={(e) => setVideoLink(e.target.value)}
+                  className={"border w-full py-3"}
+                  placeholder=""
+                  defaultValue={editData?.videoLink}
+                  required={true}
+                />
+              </div>
             </div>
             <Button
-              label={isLoading ? "Loading..." : isEditMode ? "Update" : "Add"}
+              label={isLoading ? "Loading..." : isEditMode ? "Update" : "Submit"}
               type={"submit"}
               disabled={isLoading}
-              className={`bg-primary mt-3 uppercase text-white py-2 w-full ${isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`bg-primary mt-3 uppercase text-white py-2 w-full ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             />
           </form>
         </div>

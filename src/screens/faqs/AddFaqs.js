@@ -71,7 +71,7 @@ const AddFaqs = ({
     };
   
     return (
-      <Modal isOpen={isModalOpen} onClose={closeModal}>
+      <Modal isOpen={isModalOpen} onClose={closeModal} className={' rounded-md'}>
         <div>
           <div className="p-3 flex justify-between items-center">
             <div></div>

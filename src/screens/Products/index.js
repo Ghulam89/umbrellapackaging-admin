@@ -27,7 +27,7 @@ const Sliders = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/products/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/products/getAll?page=${currentPage}&limit=${limit}&name=${search}`)
       .then((res) => {
         console.log(res);
         
@@ -62,7 +62,7 @@ const Sliders = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${Base_url}/product/delete/${id}`)
+          .delete(`${Base_url}/products/delete/${id}`)
           .then((res) => {
             if (res.status === 200) {
               Swal.fire("Deleted!", "Your file has been deleted.", "success");
@@ -124,7 +124,7 @@ const Sliders = () => {
                     </td>
                     <td className="text-sm wh font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.title}
+                        {item.name}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
@@ -143,7 +143,7 @@ const Sliders = () => {
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center  w-full items-center">
-                        <Link to={`/edit-product/${item?.id}`} className="">
+                        <Link to={`/edit-product/${item?._id}`} className="">
                         <div className=" w-6 h-6">
                         <img
                             //  onClick={() => handleEdit(item)}
@@ -156,7 +156,7 @@ const Sliders = () => {
                         </Link>
                        
                         <img
-                          onClick={() => removeFunction(item.id)}
+                          onClick={() => removeFunction(item._id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
                           className="cursor-pointer"
