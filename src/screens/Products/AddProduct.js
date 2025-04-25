@@ -8,6 +8,8 @@ import Button from "../../components/Button";
 import { MdClose } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { AsyncPaginate } from "react-select-async-paginate";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -16,9 +18,27 @@ const AddProduct = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [brandId, setBrandId] = useState(null);
   const [categoryId, setCategoryId] = useState(null);
-  console.log(brandId);
-  console.log(categoryId);
-  
+  const [bannerImage, setBannerImage] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState("");
+
+  // ReactQuill modules configuration
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'image'
+  ];
+
   const loadOptions = async (searchQuery, loadedOptions, { page }) => {
     try {
       const response = await axios.get(`${Base_url}/brands/getAll`, {
@@ -94,11 +114,26 @@ const AddProduct = () => {
     setFieldValue("images", [...selectedFiles, ...files]);
   };
 
+  const handleBannerChange = (event, setFieldValue) => {
+    const file = event.target.files[0];
+    if (file) {
+      setBannerImage(file);
+      setBannerPreview(URL.createObjectURL(file));
+      setFieldValue("bannerImage", file);
+    }
+  };
+
   const handleRemoveImage = (index, setFieldValue) => {
     setPreviewImages((prev) => prev.filter((_, i) => i !== index));
     const newFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newFiles);
     setFieldValue("images", newFiles);
+  };
+
+  const handleRemoveBanner = (setFieldValue) => {
+    setBannerImage(null);
+    setBannerPreview("");
+    setFieldValue("bannerImage", null);
   };
 
   const validationSchema = Yup.object().shape({
@@ -113,6 +148,9 @@ const AddProduct = () => {
       .max(5, "Maximum 5 images allowed"),
     brandId: Yup.string().required("Brand is required"),
     categoryId: Yup.string().required("Category is required"),
+    bannerImage: Yup.mixed().required("Banner image is required"),
+    bannerTitle: Yup.string().required("Banner title is required"),
+    bannerContent: Yup.string().required("Banner content is required"),
   });
 
   const onSubmit = async (values, { resetForm }) => {
@@ -123,24 +161,30 @@ const AddProduct = () => {
       formData.append("images", file);
     });
     
+    if (bannerImage) {
+      formData.append("bannerImage", bannerImage);
+    }
+    
     Object.keys(values).forEach((key) => {
-      if (key !== "images" && values[key] !== undefined && values[key] !== null && values[key] !== "" && key !== "brandId"  && key !== "categoryId") {
+      if (key !== "images" && key !== "bannerImage" && values[key] !== undefined && values[key] !== null && values[key] !== "" && key !== "brandId" && key !== "categoryId") {
         formData.append(key, values[key]);
       }
     });
 
-   formData.append("brandId", brandId.value);
+    formData.append("brandId", brandId.value);
     formData.append("categoryId", categoryId.value);
 
     try {
       const response = await axios.post(`${Base_url}/products/create`, formData);
-      if (response.status === 200) {
+      if (response?.data?.status === 'success') {
         toast.success(response.data.message);
         resetForm();
         setPreviewImages([]);
         setSelectedFiles([]);
         setBrandId(null);
         setCategoryId(null);
+        setBannerImage(null);
+        setBannerPreview("");
         navigate("/products");
       } else {
         toast.error(response.data.message);
@@ -168,6 +212,9 @@ const AddProduct = () => {
             brandId: "",
             images: [],
             categoryId: "",
+            bannerImage: null,
+            bannerTitle: "",
+            bannerContent: "",
           }}
           validationSchema={validationSchema}
           onSubmit={onSubmit}
@@ -305,17 +352,17 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
-
                 <div className="w-[100%]">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
-                    Description
+                    Product Description
                   </label>
-                  <Field
-                    as="textarea"
-                    name="description"
-                    rows="4"
-                    placeholder="Enter Description"
-                    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                  <ReactQuill
+                    theme="snow"
+                    modules={quillModules}
+                    formats={quillFormats}
+                    value={values.description}
+                    onChange={(value) => setFieldValue("description", value)}
+                    className="h-48 mb-12"
                   />
                   <ErrorMessage
                     name="description"
@@ -323,6 +370,77 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
+              
+
+                <div className="w-[100%]">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Banner Title
+                  </label>
+                  <Field
+                    name="bannerTitle"
+                    type="text"
+                    placeholder="Enter banner title"
+                    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                  />
+                  <ErrorMessage
+                    name="bannerTitle"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
+                <div className="w-[100%]">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Banner Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleBannerChange(e, setFieldValue)}
+                    className="block w-full p-3 text-sm text-gray-900 border rounded-md cursor-pointer focus:outline-none"
+                  />
+                  {bannerPreview && (
+                    <div className="relative h-48 w-48 mt-3">
+                      <img
+                        src={bannerPreview}
+                        alt="Banner Preview"
+                        className=" h-48 w-48 object-contain rounded-md shadow-md"
+                      />
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
+                        onClick={() => handleRemoveBanner(setFieldValue)}
+                      >
+                        <MdClose size={20} />
+                      </button>
+                    </div>
+                  )}
+                  <ErrorMessage
+                    name="bannerImage"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
+
+                <div className="w-[100%]">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Banner Content
+                  </label>
+                  <ReactQuill
+                    theme="snow"
+                    modules={quillModules}
+                    formats={quillFormats}
+                    value={values.bannerContent}
+                    onChange={(value) => setFieldValue("bannerContent", value)}
+                    className="h-48 mb-12"
+                  />
+                  <ErrorMessage
+                    name="bannerContent"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
+
+              
               </div>
 
               <div className="flex justify-center items-center mt-6">

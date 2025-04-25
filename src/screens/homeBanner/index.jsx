@@ -1,199 +1,273 @@
-import React, { useEffect, useState } from "react";
-import Wrapper from "../Wrapper";
-import Button from "../../components/Button";
-import axios from "axios";
-import Swal from "sweetalert2";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { Base_url } from "../../utils/Base_url";
-import { FaSearch } from "react-icons/fa";
+import axios from "axios";
 import Input from "../../components/Input";
-import AddBanner from "./AddBanner";
+import Button from "../../components/Button";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
 const HomeBanner = () => {
-    const [users, setUsers] = useState([]);
-  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
-  const [editData, setEditData] = useState(null);
-  const handleEdit = (item) => {
-    setEditData(item);
-    setIsUpdateOpen(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [description, setDescription] = useState("");
+  const [videoLink, setVideoLink] = useState("");
+
+  const [image, setImage] = useState(null);
+  const [bannerId, setBannerId] = useState(null);
+  const [bannerExists, setBannerExists] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ],
   };
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(15);
-  const [search, setSearch] = useState("");
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'image'
+  ];
+
   useEffect(() => {
-    fetchSizes();
-  }, [currentPage, search]);
+    fetchBanner();
+    return () => {
+      if (previewImage && previewImage.startsWith('blob:')) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, []);
 
-  const fetchSizes = () => {
-    axios
-      .get(`${Base_url}/banner/get?page=${currentPage}&limit=${limit}&search=${search}`)
-      .then((res) => {
-        setUsers(res.data.data);
-        setTotalPages(res.data.totalPages);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const handleSearch = (e) => {
-    setSearch(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  const isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
   };
 
-  const removeFunction = (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#A47ABF",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        axios
-          .delete(`${Base_url}/banner/delete/${id}`)
-          .then((res) => {
-            if (res.status === 200) {
-              Swal.fire("Deleted!", "Your file has been deleted.", "success");
-              fetchSizes();
-            }
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+  const fetchBanner = async () => {
+    setIsFetching(true);
+    try {
+      const response = await axios.get(`${Base_url}/banner/getAll`);
+       console.log(response);
+       
+      if (response.data && response.data.data) {
+        const banners = response.data.data;
+        const firstBanner = banners?.[0] || {};
+        
+        setBannerId(firstBanner?._id);
+        setDescription(firstBanner?.description || "");
+        setVideoLink(firstBanner?.videoLink || "");
+        
+        const imagePath = firstBanner?.image;
+        setPreviewImage(
+          imagePath 
+            ? (imagePath.startsWith('http') ? imagePath : `${Base_url}/${imagePath}`)
+            : null
+        );
+        setBannerExists(!!firstBanner?._id);
+      } else {
+        setBannerExists(false);
       }
-    });
+    } catch (error) {
+      console.error("Error fetching banner:", error);
+      toast.error(error.response?.data?.message || "Failed to fetch banner");
+      setBannerExists(false);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!description.trim()) {
+      toast.error("Description is required!");
+      return;
+    }
+
+    if (!videoLink.trim() || !isValidUrl(videoLink)) {
+      toast.error("Please enter a valid video URL!");
+      return;
+    }
+
+    if (!image && !previewImage) {
+      toast.error("Image is required!");
+      return;
+    }
+
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append("description", description);
+    formData.append("videoLink", videoLink);
+    if (image) {
+      formData.append("image", image);
+    }
+
+    try {
+      const url = bannerExists 
+        ? `${Base_url}/banner/update/${bannerId}`
+        : `${Base_url}/banner/create`;
+      
+      const method = bannerExists ? "PUT" : "POST";
+
+      const response = await axios({
+        method,
+        url,
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (response?.status === 200 || response?.status === 201) {
+        toast.success(response.data.message);
+        if (!bannerExists) {
+          setBannerId(response.data.data._id);
+          setBannerExists(true);
+        }
+        fetchBanner();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate image size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    // Clear previous image if exists
+    if (previewImage) {
+      URL.revokeObjectURL(previewImage);
+    }
+    
+    setImage(file);
+    setPreviewImage(URL.createObjectURL(file));
+  };
+
+  const handleDeleteBanner = async () => {
+    if (!bannerId) return;
+    
+    try {
+      await axios.delete(`${Base_url}/banner/delete/${bannerId}`);
+      toast.success("Banner deleted successfully");
+      setBannerId(null);
+      setDescription("");
+      setVideoLink("");
+      setImage(null);
+      setPreviewImage(null);
+      setBannerExists(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete banner");
+    }
   };
 
   return (
-    <>
-      <div className="flex justify-between items-center">
-        <h2 className="main_title">Banner</h2>
-        <Button
-          className="bg-primary py-2.5"
-          label="Add Banner"
-          onClick={() => {
-            setEditData(null);
-            setIsUpdateOpen(true);
-          }}
-        />
-      </div>
+    <div>
+      <h2 className="main_title mb-4">Banner</h2>
 
-      
-      <AddBanner isModalOpen={isUpdateOpen}
-        setIsModalOpen={setIsUpdateOpen}
-        isEditMode={!!editData}
-        editData={editData}
-        fetchSizes={fetchSizes}
-        
-        />
-
-      <div className="my-4">
-        <Input
-          placeholder="Search..."
-          Icon={<FaSearch />}
-          value={search}
-          onChange={handleSearch}
-          className="w-full bg-white border"
-        />
-      </div>
-      <section className="mb-20 mt-5 text-gray-800">
-        <div className="block rounded-lg shadow-lg bg-white">
-          <div className="overflow-x-auto">
-            <table className="min-w-full mb-0">
-              <thead className="bg-primary rounded-lg">
-                <tr>
-                  <th className="text-sm text-white font-bold px-6 py-4">No</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Link</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Location</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Image</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users?.map((item, index) => (
-                  <tr key={item.id} className="bg-white text-center border-b">
-                    <td className="text-sm font-normal px-6 py-4">
-                      {index + 1 + (currentPage - 1) * limit}
-                    </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.link}
-                      </span>
-                    </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.location}
-                      </span>
-                    </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <img src={item?.image}  className=" rounded-md object-cover w-16 h-16 mx-auto" alt="" />
-                    </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <div className="flex gap-2 justify-center items-center">
-                        <img
-                             onClick={() => handleEdit(item)}
-
-                          src={require("../../assets/image/edit.png")}
-                          alt="Edit"
-                          className="cursor-pointer"
-                        />
-                        <img
-                          onClick={() => removeFunction(item.id)}
-                          src={require("../../assets/image/del.png")}
-                          alt="Delete"
-                          className="cursor-pointer"
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="flex justify-end gap-2 items-center p-4">
-              <button
-                className="px-4 py-2 text-white bg-black rounded disabled:opacity-50"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <div className="flex items-center gap-4">
-                <p className=" font-medium">
-                  Page {currentPage} of {totalPages}
-                </p>
-                <select
-                  className="px-2 py-1 border rounded"
-                  value={currentPage}
-                  onChange={(e) => handlePageChange(Number(e.target.value))}
-                >
-                  {Array.from({ length: totalPages }, (_, index) => (
-                    <option key={index + 1} value={index + 1}>
-                      {index + 1}
-                    </option>
-                  ))}
-                </select>
+      <div className="p-5 bg-white rounded-md">
+        {isFetching ? (
+          <div className="text-center py-10">Loading banner data...</div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className="flex gap-5 flex-wrap">
+              <div className="w-[100%]">
+                <label className="block mb-2 text-sm font-medium text-gray-900">
+                  Banner Content
+                </label>
+                <ReactQuill
+                  theme="snow"
+                  modules={quillModules}
+                  formats={quillFormats}
+                  value={description}
+                  onChange={setDescription}
+                  className="h-48 mb-12"
+                />
               </div>
-              <button
-                className="px-4 py-2 text-white bg-black rounded disabled:opacity-50"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
+              
+              <div className="w-[100%]">
+                <Input
+                  label={"Video Link"}
+                  name={"videoLink"}
+                  value={videoLink}
+                  onChange={(e) => setVideoLink(e.target.value)}
+                  className={"border w-full py-3"}
+                  placeholder="Enter Video Link"
 
-          </div>
-        </div>
-      </section>
-    </>
+                  defaultValue={videoLink}
+
+                />
+              </div>
+              
+              <div className="w-[100%]">
+                <label className="block mb-2 font-semibold">Image</label>
+               
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
+                />
+                <p className="text-xs text-gray-500 mt-1">Max file size: 5MB</p>
+
+                 {previewImage ? (
+                  <div className="my-3 w-40 h-40 border rounded-md">
+                    <img
+                      src={previewImage}
+                      alt="Selected"
+                      className="w-40 h-40 object-cover rounded-md"
+                    />
+                  </div>
+                ) : (
+                  <p className="mb-3 text-sm text-gray-500">
+                    No image selected
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-4">
+              <Button
+                label={isLoading ? "Loading..." : bannerExists ? "Update Banner" : "Create Banner"}
+                type={"submit"}
+                disabled={isLoading || isFetching}
+                className={`bg-primary text-white py-2 px-4 rounded ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              />
+              
+              {bannerExists && (
+                <Button
+                  label={"Delete Banner"}
+                  type={"button"}
+                  onClick={handleDeleteBanner}
+                  disabled={isLoading || isFetching}
+                  className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+                />
+              )}
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   );
 };
 

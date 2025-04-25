@@ -27,7 +27,7 @@ const Faqs = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/faq/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/faq/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         console.log(res);
         

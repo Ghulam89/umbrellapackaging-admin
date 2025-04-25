@@ -24,7 +24,7 @@ const AddBanner = ({
     if (isEditMode) {
       setLocation(editData?.location || "");
       setLink(editData?.link || "");
-      setImage(editData?.image || null); // Reset image when in edit mode
+      setImage(editData?.image || null);
     }
   }, [isEditMode, editData]);
 

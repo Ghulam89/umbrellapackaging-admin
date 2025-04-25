@@ -6,6 +6,8 @@ import Modal from "../../components/modal";
 import { MdClose } from "react-icons/md";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 const AddCategories = ({
   isModalOpen,
   setIsModalOpen,
@@ -19,23 +21,48 @@ const AddCategories = ({
   const [image, setImage] = useState(editData?.image || null);
   const [banner, setBanner] = useState(editData?.bannerImage || null);
   const [bgColor, setBgColor] = useState(editData?.bgColor || "");
+  const [content, setContent] = useState(editData?.content || "");
   const resetState = () => {
     setName("");
     setImage(null);
     setBanner(null);
     setBgColor("");
   };
-  
- useEffect(() => {
-      if (isEditMode) {
-        setName(editData?.name || "");
-        setImage(editData?.image || null);
-        setBgColor(editData?.bgColor || "");
-        setBanner(editData?.bannerImage || null);
-    
-      }
-    }, [isEditMode, editData]);
-  
+
+
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'image',
+    'color', 'background',
+    'align'
+  ];
+
+  useEffect(() => {
+    if (isEditMode) {
+      setName(editData?.name || "");
+      setImage(editData?.image || null);
+      setBgColor(editData?.bgColor || "");
+      setContent(editData?.content || "");
+      setBanner(editData?.bannerImage || null);
+
+    }
+  }, [isEditMode, editData]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,16 +87,20 @@ const AddCategories = ({
       return;
     }
 
-    setIsLoading(true);
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("bgColor", bgColor);
-    
-    if (image) {
-      formData.append("image", image);
+    if (!content && !isEditMode) {
+      toast.error("Content  is required!");
+      return;
     }
 
-    if (banner) {
+    setIsLoading(true);
+    const formData = new FormData();
+    if (!isEditMode || name !== editData?.name) formData.append("name", name);
+    if (!isEditMode || bgColor !== editData?.bgColor) formData.append("bgColor", bgColor);
+    if (!isEditMode || content !== editData?.content) formData.append("content", content);
+    if (!isEditMode || image !== editData?.image) {
+      formData.append("image", image);
+    }
+    if (!isEditMode || banner !== editData?.bannerImage) {
       formData.append("bannerImage", banner);
     }
 
@@ -83,7 +114,7 @@ const AddCategories = ({
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (response?.data.status ==='success') {
+      if (response?.data.status === 'success') {
         setIsModalOpen(false);
         toast.success(response.data.message);
         fetchSizes();
@@ -101,7 +132,7 @@ const AddCategories = ({
   return (
     <Modal isOpen={isModalOpen} onClose={closeModal} className={' rounded-md'}>
       <div className="max-h-[80vh] overflow-y-auto">
-      <div className="p-3 flex justify-between items-center sticky top-0 bg-white z-10">
+        <div className="p-3 flex justify-between items-center sticky top-0 bg-white z-10">
 
           <div></div>
           <h1 className="capitalize h4 font-semibold">
@@ -130,7 +161,7 @@ const AddCategories = ({
                   defaultValue={name}
                 />
               </div>
-              
+
               <div className="w-[100%]">
                 <Input
                   label={"Background Color"}
@@ -143,19 +174,26 @@ const AddCategories = ({
                 />
               </div>
 
-              
+
               <div className="w-[100%]">
                 <label className="block mb-2 font-semibold">Banner</label>
+                
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setBanner(e.target.files[0])}
+                  className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
+                />
                 {banner ? (
-                  <div className="mb-3 border rounded-md">
+                  <div className="mb-3 w-40 h-40  border mt-3 rounded-md">
                     <img
                       src={
                         typeof banner === "string"
-                          ? banner 
+                          ? banner
                           : URL.createObjectURL(banner)
                       }
                       alt="Selected"
-                      className="w-full h-40 object-cover rounded-md"
+                      className="w-40 h-40 object-cover rounded-md"
                     />
                   </div>
                 ) : (
@@ -163,51 +201,58 @@ const AddCategories = ({
                     No banner selected
                   </p>
                 )}
+              </div>
+
+
+
+              <div className="w-[100%]">
+                <label className="block mb-2 font-semibold">Choose Image</label>
+                
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setBanner(e.target.files[0])}
+                  onChange={(e) => setImage(e.target.files[0])}
                   className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
+                />
+                {image ? (
+                  <div className="my-3 border w-40 h-40  rounded-md">
+                    <img
+                      src={
+                        typeof image === "string"
+                          ? image
+                          : URL.createObjectURL(image)
+                      }
+                      alt="Selected"
+                      className="w-40 h-40  object-cover rounded-md"
+                    />
+                  </div>
+                ) : (
+                  <p className="mb-3 text-sm text-gray-500">
+                    No image selected
+                  </p>
+                )}
+              </div>
+
+              <div className=" w-full">
+                <label className="block mb-2 font-medium"> Choose Content*</label>
+                <ReactQuill
+                  theme="snow"
+                  value={content}
+                  onChange={setContent}
+                  modules={modules}
+                  formats={formats}
+                  className="bg-white rounded-md"
+                  placeholder="Write your blog content here..."
                 />
               </div>
 
-             
-            
-                <div className="w-[100%]">
-                  <label className="block mb-2 font-semibold">Image</label>
-                  {image ? (
-                    <div className="mb-3 border rounded-md">
-                      <img
-                        src={
-                          typeof image === "string"
-                            ? image 
-                            : URL.createObjectURL(image)
-                        }
-                        alt="Selected"
-                        className="w-full h-40 object-cover rounded-md"
-                      />
-                    </div>
-                  ) : (
-                    <p className="mb-3 text-sm text-gray-500">
-                      No image selected
-                    </p>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImage(e.target.files[0])}
-                    className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
-                  />
-                </div>
-              
             </div>
             <Button
               label={isLoading ? "Loading..." : isEditMode ? "Update" : "Add"}
               type={"submit"}
               disabled={isLoading}
-              className={`bg-primary mt-3 uppercase text-white py-2 w-full ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`bg-primary mt-3 uppercase text-white py-2 w-full ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
             />
           </form>
         </div>
