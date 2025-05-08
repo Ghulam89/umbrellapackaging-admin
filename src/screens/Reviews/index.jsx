@@ -4,7 +4,6 @@ import Swal from "sweetalert2";
 import { Base_url } from "../../utils/Base_url";
 import { FaSearch } from "react-icons/fa";
 import Input from "../../components/Input";
-import { Link } from "react-router-dom";
 const Reviews = () => {
   const [users, setUsers] = useState([]);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -24,7 +23,7 @@ const Reviews = () => {
   const fetchSizes = () => {
     axios
       .get(
-        `${Base_url}/user/get?page=${currentPage}&limit=${limit}&search=${search}`
+        `${Base_url}/rating/getAll?page=${currentPage}&limit=${limit}&search=${search}`
       )
       .then((res) => {
         setUsers(res.data.data);
@@ -58,7 +57,7 @@ const Reviews = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${Base_url}/user/delete/${id}`)
+          .delete(`${Base_url}/rating/delete/${id}`)
           .then((res) => {
             if (res.status === 200) {
               Swal.fire("Deleted!", "Your file has been deleted.", "success");
@@ -101,7 +100,11 @@ const Reviews = () => {
                     Email
                   </th>
                   <th className="text-sm text-white font-bold px-6 py-4">
-                    Phone
+                    Rating
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4">
+                    Review  
+                  
                   </th>
                   <th className="text-sm text-white font-bold px-6 py-4">
                     Action
@@ -116,7 +119,7 @@ const Reviews = () => {
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.username}
+                        {item.name}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
@@ -126,20 +129,17 @@ const Reviews = () => {
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.phone}
+                        {item.rating}
                       </span>
                     </td>
+                     <td className="text-sm font-normal px-6 py-4">
+                     <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                       {item.review}
+                     </span>
+                   </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center items-center">
-                        <Link to={`/customer/${item?.id}`}>
-                        <img
-                          
-                          src={require("../../assets/image/edit.png")}
-                          alt="Edit"
-                          className="cursor-pointer"
-                        />
-                        </Link>
-                        
+                      
                         <img
                           onClick={() => removeFunction(item.id)}
                           src={require("../../assets/image/del.png")}

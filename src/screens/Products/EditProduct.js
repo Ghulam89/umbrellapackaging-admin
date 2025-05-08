@@ -253,9 +253,9 @@ const EditProduct = () => {
       formData.append("categoryId", categoryId.value);
     }
 
-    if (existingImages.length > 0) {
-      formData.append("existingImages", JSON.stringify(existingImages));
-    }
+    // if (existingImages.length > 0) {
+    //   formData.append("existingImages", JSON.stringify(existingImages));
+    // }
 
     try {
       const response = await axios.put(`${Base_url}/products/update/${id}`, formData);
@@ -497,10 +497,10 @@ const EditProduct = () => {
                       onChange={(e) => handleBannerChange(e, setFieldValue)}
                       className="block w-full p-3 text-sm text-gray-900 border rounded-md cursor-pointer focus:outline-none"
                     />
-                    {(bannerPreview || existingBanner) && (
+                    {(bannerPreview) && (
                       <div className="relative w-40 h-40 mt-3">
                         <img
-                          src={bannerPreview || existingBanner}
+                          src={bannerPreview}
                           alt="Banner Preview"
                           className=" h-40 w-40  object-cover rounded-md shadow-md"
                         />

@@ -13,10 +13,10 @@ const OrderDetails = () => {
   
   useEffect(() => {
     axios
-      .get(`${Base_url}/order/get/${id}`)
+      .get(`${Base_url}/checkout/get/${id}`)
       .then((res) => {
         setOrderDetails(res.data.data);
-        setProducts(res.data.data.cart || []);
+        setProducts(res?.data?.data?.productIds || []);
       })
       .catch((error) => console.error(error));
   }, [id]);
@@ -41,7 +41,7 @@ const OrderDetails = () => {
     };
 
     axios
-      .put(`${Base_url}/order/update/${id}`, params)
+      .put(`${Base_url}/checkout/update/${id}`, params)
       .then((res) => {
         if (res?.data?.status === "ok") {
           toast.success("Status updated successfully!");
@@ -90,14 +90,11 @@ const OrderDetails = () => {
             <div className="space-y-4 text-sm text-gray-700">
               <p>
                 <strong>Order Date:</strong>{" "}
-                {moment(orderDetails.updatedAt).format("DD-MM-YYYY") || "N/A"}
+                {moment(orderDetails.updatedAt).format("DD-MM-YYYY")}
               </p>
+              
               <p>
-                <strong>Delivery Date:</strong>{" "}
-                {orderDetails.deliveryDate || "N/A"}
-              </p>
-              <p>
-                <strong>Status:</strong> {orderDetails.status || "N/A"}
+                <strong>Status:</strong> {orderDetails.status}
               </p>
               <p>
                 <strong>Payment Status:</strong> {orderDetails.paymentStatus}
@@ -123,7 +120,7 @@ const OrderDetails = () => {
                 <strong>Email:</strong> {orderDetails.email}
               </p>
               <p>
-                <strong>Phone:</strong> {orderDetails.phone}
+                <strong>Phone:</strong> {orderDetails.phoneNumber}
               </p>
             </div>
           </div>
@@ -135,8 +132,8 @@ const OrderDetails = () => {
             </h2>
             <div className="space-y-4 text-sm text-gray-700">
               <p>
-                <strong>Shipping Address:</strong> {orderDetails.addressLine1},{" "}
-                {orderDetails.city}, {orderDetails.state},{" "}
+                <strong>Shipping Address:</strong> {orderDetails?.delivery?.addressLine1}
+                {orderDetails.city}, {orderDetails.state}
                 {orderDetails.country}
               </p>
               <p>
@@ -158,20 +155,20 @@ const OrderDetails = () => {
                 className="flex items-center justify-between border-b pb-4 mb-4 hover:bg-gray-50 p-4 rounded-md transition"
               >
                 <img
-                  src={item?.product?.Image1}
-                  alt={item?.product?.name}
+                  src={item?.images[0]}
+               alt=""
                   className="w-20 h-20 object-cover rounded-lg border"
                 />
                 <div className="flex-1 mx-4">
                   <h3 className="text-lg font-medium text-gray-800">
-                    {item?.product?.name}
+                    {item?.name}
                   </h3>
                   <p className="text-sm text-gray-600">
                     Quantity: {item?.quantity}
                   </p>
                 </div>
                 <p className="text-lg font-bold text-gray-900">
-                  ${(item?.totalOriginalPrice ).toFixed(2)}
+                  ${(item?.actualPrice )}
                 </p>
               </div>
             ))

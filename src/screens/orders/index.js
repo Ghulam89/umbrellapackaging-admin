@@ -26,7 +26,7 @@ const Orders = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/order/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/checkout/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         console.log(res);
         
@@ -61,7 +61,7 @@ const Orders = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${Base_url}/order/delete/${id}`)
+          .delete(`${Base_url}/checkout/delete/${id}`)
           .then((res) => {
             if (res.status === 200) {
               Swal.fire("Deleted!", "Your file has been deleted.", "success");
@@ -103,6 +103,7 @@ const Orders = () => {
                   <th className="text-sm text-white font-bold px-6 py-4">No</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Name</th>
                   <th className="text-sm text-white font-bold px-6 py-4">City</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Country</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Address</th>
                   <th className="text-sm text-white font-bold px-6 whitespace-nowrap py-4">Total Bills</th>
                   <th className="text-sm text-white font-bold px-6 whitespace-nowrap py-4">from deliver day</th>
@@ -124,13 +125,19 @@ const Orders = () => {
 
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {`${item.city}`}
+                        {`${item?.delivery?.city}`}
+                      </span>
+                    </td>
+                    
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {`${item?.delivery?.country}`}
                       </span>
                     </td>
 
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {`${item.addressLine1}`}
+                        {`${item?.delivery?.addressLine1}`}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
@@ -148,7 +155,7 @@ const Orders = () => {
                    
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center items-center">
-                        <Link to={`/order-details/${item?.id}`}>
+                        <Link to={`/order-details/${item?._id}`}>
                         <FaRegEye size={30} className=" text-secondary" />
 
                         </Link>
@@ -160,7 +167,7 @@ const Orders = () => {
                           className="cursor-pointer"
                         /> */}
                         <img
-                          onClick={() => removeFunction(item.id)}
+                          onClick={() => removeFunction(item._id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
                           className="cursor-pointer"

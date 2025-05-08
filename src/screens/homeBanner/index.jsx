@@ -6,17 +6,20 @@ import Input from "../../components/Input";
 import Button from "../../components/Button";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-
 const HomeBanner = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [description, setDescription] = useState("");
   const [videoLink, setVideoLink] = useState("");
-
   const [image, setImage] = useState(null);
   const [bannerId, setBannerId] = useState(null);
   const [bannerExists, setBannerExists] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [modifiedFields, setModifiedFields] = useState({
+    description: false,
+    videoLink: false,
+    image: false
+  });
   
   const quillModules = {
     toolbar: [
@@ -57,16 +60,12 @@ const HomeBanner = () => {
     setIsFetching(true);
     try {
       const response = await axios.get(`${Base_url}/banner/getAll`);
-       console.log(response);
-       
       if (response.data && response.data.data) {
         const banners = response.data.data;
         const firstBanner = banners?.[0] || {};
-        
         setBannerId(firstBanner?._id);
         setDescription(firstBanner?.description || "");
         setVideoLink(firstBanner?.videoLink || "");
-        
         const imagePath = firstBanner?.image;
         setPreviewImage(
           imagePath 
@@ -74,6 +73,11 @@ const HomeBanner = () => {
             : null
         );
         setBannerExists(!!firstBanner?._id);
+        setModifiedFields({
+          description: false,
+          videoLink: false,
+          image: false
+        });
       } else {
         setBannerExists(false);
       }
@@ -99,15 +103,22 @@ const HomeBanner = () => {
       return;
     }
 
-    if (!image && !previewImage) {
-      toast.error("Image is required!");
+    if (!bannerExists && !image) {
+      toast.error("Image is required for new banner!");
       return;
     }
 
     setIsLoading(true);
     const formData = new FormData();
-    formData.append("description", description);
-    formData.append("videoLink", videoLink);
+    
+    if (modifiedFields.description || !bannerExists) {
+      formData.append("description", description);
+    }
+    
+    if (modifiedFields.videoLink || !bannerExists) {
+      formData.append("videoLink", videoLink);
+    }
+
     if (image) {
       formData.append("image", image);
     }
@@ -137,10 +148,20 @@ const HomeBanner = () => {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.error(error.response?.data?.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDescriptionChange = (value) => {
+    setDescription(value);
+    setModifiedFields(prev => ({...prev, description: true}));
+  };
+
+  const handleVideoLinkChange = (e) => {
+    setVideoLink(e.target.value);
+    setModifiedFields(prev => ({...prev, videoLink: true}));
   };
 
   const handleImageChange = (e) => {
@@ -159,12 +180,21 @@ const HomeBanner = () => {
     }
     
     setImage(file);
+    setModifiedFields(prev => ({...prev, image: true}));
     setPreviewImage(URL.createObjectURL(file));
+  };
+
+  const handleClearImage = () => {
+    if (previewImage) {
+      URL.revokeObjectURL(previewImage);
+    }
+    setImage(null);
+    setPreviewImage(null);
+    setModifiedFields(prev => ({...prev, image: true}));
   };
 
   const handleDeleteBanner = async () => {
     if (!bannerId) return;
-    
     try {
       await axios.delete(`${Base_url}/banner/delete/${bannerId}`);
       toast.success("Banner deleted successfully");
@@ -174,6 +204,11 @@ const HomeBanner = () => {
       setImage(null);
       setPreviewImage(null);
       setBannerExists(false);
+      setModifiedFields({
+        description: false,
+        videoLink: false,
+        image: false
+      });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete banner");
     }
@@ -198,7 +233,7 @@ const HomeBanner = () => {
                   modules={quillModules}
                   formats={quillFormats}
                   value={description}
-                  onChange={setDescription}
+                  onChange={handleDescriptionChange}
                   className="h-48 mb-12"
                 />
               </div>
@@ -208,12 +243,10 @@ const HomeBanner = () => {
                   label={"Video Link"}
                   name={"videoLink"}
                   value={videoLink}
-                  onChange={(e) => setVideoLink(e.target.value)}
+                  onChange={handleVideoLinkChange}
                   className={"border w-full py-3"}
                   placeholder="Enter Video Link"
-
                   defaultValue={videoLink}
-
                 />
               </div>
               
@@ -228,13 +261,22 @@ const HomeBanner = () => {
                 />
                 <p className="text-xs text-gray-500 mt-1">Max file size: 5MB</p>
 
-                 {previewImage ? (
-                  <div className="my-3 w-40 h-40 border rounded-md">
-                    <img
-                      src={previewImage}
-                      alt="Selected"
-                      className="w-40 h-40 object-cover rounded-md"
-                    />
+                {previewImage ? (
+                  <div className="my-3">
+                    <div className="w-40 h-40 border rounded-md relative">
+                      <img
+                        src={previewImage}
+                        alt="Selected"
+                        className="w-40 h-40 object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleClearImage}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <p className="mb-3 text-sm text-gray-500">

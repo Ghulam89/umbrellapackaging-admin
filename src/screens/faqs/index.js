@@ -146,7 +146,7 @@ const Faqs = () => {
                           className="cursor-pointer"
                         />
                         <img
-                          onClick={() => removeFunction(item.id)}
+                          onClick={() => removeFunction(item._id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
                           className="cursor-pointer"
