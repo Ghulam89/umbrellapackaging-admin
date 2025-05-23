@@ -103,22 +103,22 @@ const AddSubCategory = ({
       setBannerContentFourth(editData?.bannerContentFourth || "");
 
       if (editData?.icon) {
-        setIconPreview(editData.icon);
+        setIconPreview(`${Base_url}/${editData.icon}`);
       }
       if (editData?.image) {
-        setImagePreview(editData.image);
+        setImagePreview(`${Base_url}/${editData.image}`);
       }
       if (editData?.bannerImageFirst) {
-        setBannerImageFirstPreview(editData.bannerImageFirst);
+        setBannerImageFirstPreview(`${Base_url}/${editData.bannerImageFirst}`);
       }
       if (editData?.bannerImageSecond) {
-        setBannerImageSecondPreview(editData.bannerImageSecond);
+        setBannerImageSecondPreview(`${Base_url}/${editData.bannerImageSecond}`);
       }
       if (editData?.bannerImageThird) {
-        setBannerImageThirdPreview(editData.bannerImageThird);
+        setBannerImageThirdPreview(`${Base_url}/${editData.bannerImageThird }`);
       }
       if (editData?.bannerImageFourth) {
-        setBannerImageFourthPreview(editData.bannerImageFourth);
+        setBannerImageFourthPreview(`${Base_url}/${editData.bannerImageFourth }`);
       }
 
       if (editData?.brandId?._id) {

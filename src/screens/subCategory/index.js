@@ -139,7 +139,7 @@ const SubCategory = () => {
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
-                      <img src={item?.image}  className=" rounded-md w-16 h-16 mx-auto" alt="" />
+                      <img src={`${Base_url}/${item?.image}`}  className=" rounded-md w-16 h-16 mx-auto" alt="" />
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center items-center">

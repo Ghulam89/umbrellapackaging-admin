@@ -55,10 +55,10 @@ const AddCategories = ({
   useEffect(() => {
     if (isEditMode) {
       setName(editData?.name || "");
-      setImage(editData?.image || null);
+      setImage(`${Base_url}/${editData?.image}`|| null);
       setBgColor(editData?.bgColor || "");
       setContent(editData?.content || "");
-      setBanner(editData?.bannerImage || null);
+      setBanner( `${Base_url}/${editData?.bannerImage}` || null);
 
     }
   }, [isEditMode, editData]);

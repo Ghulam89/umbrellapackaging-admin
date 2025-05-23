@@ -102,6 +102,9 @@ const InstantQuote = () => {
                   <th className="text-sm whitespace-nowrap text-white font-bold px-6 py-4">
                     Phone Number
                   </th>
+                  <th className="text-sm whitespace-nowrap text-white font-bold px-6 py-4">
+                  Image
+                  </th>
                  
                   <th className="text-sm text-white font-bold px-6 py-4">
                   Message
@@ -132,7 +135,15 @@ const InstantQuote = () => {
                         {item.phoneNumber}
                       </span>
                     </td>
-                  
+                    <td className="text-sm font-normal px-6 py-4">
+                    {item?.image?
+                      <div  className=" w-16 h-16">
+                      <img  src={`${Base_url}/${item?.image}`} className=" rounded-md w-full h-full object-cover" alt="" />
+                    </div>:<div  className=" w-16 h-16">
+                        <img  src={require('../../assets/image/profile.jpg')} className=" rounded-md w-full h-full object-cover" alt="" />
+                      </div>}
+                    </td>
+                   
                   
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">

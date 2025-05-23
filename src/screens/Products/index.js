@@ -139,7 +139,7 @@ const Sliders = () => {
                     </td>
                     
                     <td className="text-sm font-normal whitespace-nowrap px-4 py-4">
-                      <img src={item?.images[0]}  className=" rounded-md w-20 h-16 mx-auto" alt="" />
+                      <img src={`${Base_url}/${item?.images[0]}`}  className=" rounded-md w-20 h-16 mx-auto" alt="" />
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center  w-full items-center">

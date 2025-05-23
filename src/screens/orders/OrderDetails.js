@@ -10,7 +10,7 @@ const OrderDetails = () => {
   const [orderDetails, setOrderDetails] = useState({});
   const [products, setProducts] = useState([]);
   console.log(orderDetails);
-  
+
   useEffect(() => {
     axios
       .get(`${Base_url}/checkout/get/${id}`)
@@ -37,7 +37,7 @@ const OrderDetails = () => {
 
   const updateStatus = (newStatus) => {
     const params = {
-      status:newStatus,
+      status: newStatus,
     };
 
     axios
@@ -59,27 +59,27 @@ const OrderDetails = () => {
     <>
       <div className=" w-full mx-auto py-10 px-6">
         <div className=" flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
-          Your Order Details
-        </h1>
-        <div className="mt-4 pb-3">
+          <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
+            Your Order Details
+          </h1>
+          <div className="mt-4 pb-3">
             <label>Status </label>
             <select
-  className="w-full px-4 py-2.5 border rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-  value={status}
-  onChange={(e) => {
-    const selectedStatus = e.target.value;
-    updateStatus(selectedStatus);
-  }}
->
-  <option value="pending">Pending</option>
-  <option value="in-progress">In Progress</option>
-  <option value="on-the-way">On the Way</option>
-  <option value="cancelled">Cancelled</option>
-  <option value="returned">Returned</option>
-  <option value="completed">Completed</option>
-</select>
-    </div>
+              className="w-full px-4 py-2.5 border rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={status}
+              onChange={(e) => {
+                const selectedStatus = e.target.value;
+                updateStatus(selectedStatus);
+              }}
+            >
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="on-the-way">On the Way</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="returned">Returned</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Order Info */}
@@ -92,7 +92,7 @@ const OrderDetails = () => {
                 <strong>Order Date:</strong>{" "}
                 {moment(orderDetails.updatedAt).format("DD-MM-YYYY")}
               </p>
-              
+
               <p>
                 <strong>Status:</strong> {orderDetails.status}
               </p>
@@ -155,8 +155,8 @@ const OrderDetails = () => {
                 className="flex items-center justify-between border-b pb-4 mb-4 hover:bg-gray-50 p-4 rounded-md transition"
               >
                 <img
-                  src={item?.images[0]}
-               alt=""
+                  src={`${Base_url}/${item?.images[0]}`}
+                  alt=""
                   className="w-20 h-20 object-cover rounded-lg border"
                 />
                 <div className="flex-1 mx-4">
@@ -168,7 +168,7 @@ const OrderDetails = () => {
                   </p>
                 </div>
                 <p className="text-lg font-bold text-gray-900">
-                  ${(item?.actualPrice )}
+                  ${(item?.actualPrice)}
                 </p>
               </div>
             ))
@@ -191,10 +191,10 @@ const OrderDetails = () => {
               <span>Shipping Charge</span>
               <span>${orderDetails?.deliveryCharges}</span>
             </div>
-            
+
             <div className="flex justify-between">
               <span>Discount</span>
-              <span>{(Number(orderDetails?.subTotalBill)*Number(orderDetails?.discount))/100}</span>
+              <span>{(Number(orderDetails?.subTotalBill) * Number(orderDetails?.discount)) / 100}</span>
             </div>
             <div className="flex justify-between text-lg font-bold text-gray-900">
               <span>Total</span>

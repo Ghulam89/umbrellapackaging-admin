@@ -106,6 +106,9 @@ const RequestQuote = () => {
                   Company Name
                   </th>
                   <th className="text-sm whitespace-nowrap text-white font-bold px-6 py-4">
+                    Image
+                  </th>
+                  <th className="text-sm whitespace-nowrap text-white font-bold px-6 py-4">
                   Box Style
                   </th>
                   <th className="text-sm text-white font-bold px-6 py-4">
@@ -164,19 +167,29 @@ const RequestQuote = () => {
                         {item.phoneNumber}
                       </span>
                     </td>
+                   
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.companyName}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.companyName}
-                      </span>
+                      {item?.image?
+                      <div  className=" w-16 h-16">
+                      <img  src={`${Base_url}/${item?.image}`} className=" rounded-md w-full h-full object-cover" alt="" />
+                    </div>:<div  className=" w-16 h-16">
+                        <img  src={require('../../assets/image/profile.jpg')} className=" rounded-md w-full h-full object-cover" alt="" />
+                      </div>}
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.boxStyle}
+                      </span>
+                    </td>
+                   
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {item.length}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
@@ -186,7 +199,7 @@ const RequestQuote = () => {
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.length}
+                        {item.depth}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">

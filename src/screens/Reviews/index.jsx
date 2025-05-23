@@ -106,9 +106,9 @@ const Reviews = () => {
                     Review  
                   
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  {/* <th className="text-sm text-white font-bold px-6 py-4">
                     Action
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody>
@@ -137,17 +137,17 @@ const Reviews = () => {
                        {item.review}
                      </span>
                    </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    {/* <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center items-center">
                       
                         <img
-                          onClick={() => removeFunction(item.id)}
+                          onClick={() => removeFunction(item._id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
                           className="cursor-pointer"
                         />
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

@@ -64,7 +64,7 @@ const EditProduct = () => {
         setExistingImages(product.images || []);
         
         if (product.bannerImage) {
-          setExistingBanner(product.bannerImage);
+          setExistingBanner(`${Base_url}/${product.bannerImage}`);
         }
         
         if (product.brandId) {
@@ -104,6 +104,9 @@ const EditProduct = () => {
     bannerTitle: "",
     bannerContent: "",
   });
+
+  console.log(initialValues);
+  
 
   const loadOptions = async (searchQuery, loadedOptions, { page }) => {
     try {
@@ -410,7 +413,7 @@ const EditProduct = () => {
                       {existingImages.map((image, index) => (
                         <div key={`existing-${index}`} className="relative">
                           <img
-                            src={image}
+                            src={`${Base_url}/${image}`}
                             alt="Preview"
                             className="w-24 h-24 object-cover rounded-md shadow-md"
                           />
@@ -488,37 +491,47 @@ const EditProduct = () => {
                     />
                   </div>
                   <div className="w-[100%]">
-                    <label className="block mb-2 text-sm font-medium text-gray-900">
-                      Banner Image
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleBannerChange(e, setFieldValue)}
-                      className="block w-full p-3 text-sm text-gray-900 border rounded-md cursor-pointer focus:outline-none"
-                    />
-                    {(bannerPreview) && (
-                      <div className="relative w-40 h-40 mt-3">
-                        <img
-                          src={bannerPreview}
-                          alt="Banner Preview"
-                          className=" h-40 w-40  object-cover rounded-md shadow-md"
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
-                          onClick={() => handleRemoveBanner(setFieldValue)}
-                        >
-                          <MdClose size={20} />
-                        </button>
-                      </div>
-                    )}
-                    <ErrorMessage
-                      name="bannerImage"
-                      component="div"
-                      className="text-red text-sm mt-1"
-                    />
-                  </div>
+  <label className="block mb-2 text-sm font-medium text-gray-900">
+    Banner Image
+  </label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => handleBannerChange(e, setFieldValue)}
+    className="block w-full p-3 text-sm text-gray-900 border rounded-md cursor-pointer focus:outline-none"
+  />
+  {(bannerPreview || existingBanner) && (
+    <div className="relative w-40 h-40 mt-3">
+      <img
+        src={bannerPreview || existingBanner}
+        alt="Banner Preview"
+        className="h-40 w-40 object-cover rounded-md shadow-md"
+      />
+      <button
+        type="button"
+        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
+        onClick={() => handleRemoveBanner(setFieldValue)}
+      >
+        <MdClose size={20} />
+      </button>
+      {existingBanner && !bannerPreview && (
+        <span className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+          Existing
+        </span>
+      )}
+      {bannerPreview && (
+        <span className="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
+          New
+        </span>
+      )}
+    </div>
+  )}
+  <ErrorMessage
+    name="bannerImage"
+    component="div"
+    className="text-red text-sm mt-1"
+  />
+</div>
 
                  
 

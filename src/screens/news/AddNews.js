@@ -13,13 +13,12 @@ const AddNews = ({
   isModalOpen,
   setIsModalOpen,
   closeModal,
-  fetchBlogs,
+  fetchSizes,
   isEditMode = false,
   editData = {},
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
-  const [shortDescription, setShortDescription] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
   const [status, setStatus] = useState("pending");
@@ -28,9 +27,8 @@ const AddNews = ({
   useEffect(() => {
     if (isEditMode && editData) {
       setTitle(editData.title || "");
-      setShortDescription(editData.shortDescription || "");
       setContent(editData.content || "");
-      setImage(editData.image || null);
+      setImage(`${Base_url}/${editData.image}` || null);
       setStatus(editData.status || "pending");
       setSelectedCategory(editData.category || "");
     }
@@ -38,7 +36,6 @@ const AddNews = ({
 
   const resetState = () => {
     setTitle("");
-    setShortDescription("");
     setContent("");
     setImage(null);
     setStatus("pending");
@@ -48,8 +45,8 @@ const AddNews = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !shortDescription.trim() || !content.trim()) {
-      toast.error("Title, short description and content are required!");
+    if (!title.trim() ||  !content.trim()) {
+      toast.error("Title,  and content are required!");
       return;
     }
 
@@ -61,7 +58,6 @@ const AddNews = ({
     setIsLoading(true);
     const formData = new FormData();
     formData.append("title", title);
-    formData.append("shortDescription", shortDescription);
     formData.append("content", content);
     formData.append("status", status);
     formData.append("category", selectedCategory);
@@ -83,7 +79,7 @@ const AddNews = ({
       if (response?.status === 200) {
         setIsModalOpen(false);
         toast.success(response.data.message);
-        fetchBlogs();
+        fetchSizes();
         resetState();
       } else {
         toast.error(response.data.message);
@@ -146,24 +142,11 @@ const AddNews = ({
                   className="border w-full p-3 rounded-md"
                   placeholder="Enter blog title"
                   required
+
+                  defaultValue={title}
                 />
               </div>
 
-              <div>
-                <Input
-                  label="Short Description*"
-                  name="shortDescription"
-                  value={shortDescription}
-                  onChange={(e) => setShortDescription(e.target.value)}
-                  className="border w-full p-3 rounded-md"
-                  placeholder="A brief summary of your blog post"
-                  required
-                />
-              </div>
-
-           
-
-           
 
               <div>
                 <label className="block mb-2 font-medium">
@@ -172,8 +155,24 @@ const AddNews = ({
                     <span className="text-xs text-gray-500 ml-1">(required)</span>
                   )}
                 </label>
+
+
+                <div className=" rounded-md ">
+                  
+                    <label className="">
+                      
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImage(e.target.files[0])}
+                        className=" w-full cursor-pointer bg-blue-50 text-blue-600 p-2  rounded-md hover:bg-blue-100"
+                        required={!isEditMode}
+                      />
+                    </label>
+                  </div>
+                 
                 {image ? (
-                  <div className="mb-3 border rounded-md overflow-hidden">
+                  <div className="mb-3 border w-32 h-32 mt-4 rounded-md overflow-hidden">
                     <img
                       src={
                         typeof image === "string"
@@ -181,34 +180,14 @@ const AddNews = ({
                           : URL.createObjectURL(image)
                       }
                       alt="Featured preview"
-                      className="w-full h-48 object-cover"
+                      className="w-full  h-full object-cover"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setImage(null)}
-                      className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-sm"
-                    >
-                      Change Image
-                    </button>
+                   
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed rounded-md p-4 text-center">
-                    <p className="text-gray-500 mb-2">No image selected</p>
-                    <label className="cursor-pointer bg-blue-50 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-100">
-                      Select Image
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setImage(e.target.files[0])}
-                        className="hidden"
-                        required={!isEditMode}
-                      />
-                    </label>
-                  </div>
+                  <p className="text-gray-500 mb-2">No image selected</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Recommended size: 1200x630 pixels (JPG or PNG)
-                </p>
+                
               </div>
 
               <div>
