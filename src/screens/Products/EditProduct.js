@@ -23,12 +23,37 @@ const EditProduct = () => {
   const [bannerImage, setBannerImage] = useState(null);
   const [bannerPreview, setBannerPreview] = useState("");
   const [existingBanner, setExistingBanner] = useState("");
+  const [altTexts, setAltTexts] = useState([]);
+  const [bannerImageAltText, setbannerImageAltText] = useState("");
+
+  // Format filename utility function
+  const formatFileName = (fileName) => {
+    if (!fileName) return '';
+    return fileName
+      .replace(/\.[^/.]+$/, '')  // Remove extension
+      .replace(/[_-]/g, ' ')     // Replace underscores/dashes with spaces
+      .replace(/\s+/g, ' ')      // Collapse multiple spaces
+      .trim()                   // Trim whitespace
+      .split(' ')               // Split into words
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');               // Rejoin words
+  };
+
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
+  };
 
   const quillModules = {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       ['link', 'image'],
       ['clean']
     ],
@@ -47,9 +72,14 @@ const EditProduct = () => {
         setLoader(true);
         const response = await axios.get(`${Base_url}/products/get/${id}`);
         const product = response.data.data;
-        
+
         setInitialValues({
           name: product.name || "",
+          slug: product.slug || "",
+          metaTitle: product.metaTitle || "",
+          metaDescription: product.metaDescription || "",
+          keywords: product.keywords || "",
+          robots: product.robots || "index, follow",
           actualPrice: product.actualPrice || "",
           description: product.description || "",
           size: product.size || "",
@@ -59,26 +89,35 @@ const EditProduct = () => {
           bannerImage: product.bannerImage || "",
           bannerTitle: product.bannerTitle || "",
           bannerContent: product.bannerContent || "",
+          bannerImageAltText: product.bannerImageAltText || "",
         });
 
         setExistingImages(product.images || []);
-        
+
         if (product.bannerImage) {
           setExistingBanner(`${Base_url}/${product.bannerImage}`);
+          setbannerImageAltText(product.bannerImage.altText || formatFileName(product.bannerImage.originalPath));
         }
-        
+
         if (product.brandId) {
           setBrandId({
             value: product.brandId._id,
             label: product.brandId.name
           });
         }
-        
+
         if (product.categoryId) {
           setCategoryId({
             value: product.categoryId._id,
             label: product.categoryId.title
           });
+        }
+
+        // Initialize alt texts for existing images
+        if (product.images && product.images.length > 0) {
+          setAltTexts(product.images.map(img =>
+            img.altText || formatFileName(img.originalPath)
+          ));
         }
 
       } catch (error) {
@@ -94,6 +133,11 @@ const EditProduct = () => {
 
   const [initialValues, setInitialValues] = useState({
     name: "",
+    slug: "",
+    metaTitle: "",
+    metaDescription: "",
+    keywords: "",
+    robots: "index, follow",
     actualPrice: "",
     description: "",
     size: "",
@@ -105,8 +149,74 @@ const EditProduct = () => {
     bannerContent: "",
   });
 
-  console.log(initialValues);
-  
+  const handleFileChange = (event, setFieldValue) => {
+    const files = Array.from(event.target.files);
+    if (files.length + selectedFiles.length + existingImages.length > 5) {
+      toast.error("You can upload maximum 5 images in total");
+      return;
+    }
+
+    const newFiles = [...selectedFiles, ...files];
+    setSelectedFiles(newFiles);
+
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviewImages(prev => [...prev, ...newPreviews]);
+
+    // Initialize alt texts with formatted file names
+    const newAltTexts = [...altTexts, ...files.map(file => formatFileName(file.name))];
+    setAltTexts(newAltTexts);
+
+    setFieldValue("images", newFiles.map((file, index) => ({
+      url: file,
+      altText: newAltTexts[index] || "",
+      originalPath: file.name
+    })));
+  };
+
+  const handleBannerChange = (event, setFieldValue) => {
+    const file = event.target.files[0];
+    if (file) {
+      setBannerImage(file);
+      setBannerPreview(URL.createObjectURL(file));
+      setbannerImageAltText(formatFileName(file.name));
+      setFieldValue("bannerImage", {
+        url: file,
+        altText: formatFileName(file.name),
+        originalPath: file.name
+      });
+    }
+  };
+
+  const handleRemoveImage = (index, type, setFieldValue) => {
+    if (type === 'existing') {
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+      const newAltTexts = [...altTexts];
+      newAltTexts.splice(index, 1);
+      setAltTexts(newAltTexts);
+    } else {
+      setPreviewImages(prev => prev.filter((_, i) => i !== index));
+      const newFiles = selectedFiles.filter((_, i) => i !== index);
+      setSelectedFiles(newFiles);
+
+      const newAltTexts = [...altTexts];
+      newAltTexts.splice(index, 1);
+      setAltTexts(newAltTexts);
+
+      setFieldValue("images", newFiles.map((file, i) => ({
+        url: file,
+        altText: newAltTexts[i] || "",
+        originalPath: file.name
+      })));
+    }
+  };
+
+  const handleRemoveBanner = (setFieldValue) => {
+    setBannerImage(null);
+    setBannerPreview("");
+    setExistingBanner("");
+    setbannerImageAltText("");
+    setFieldValue("bannerImage", null);
+  };
 
   const loadOptions = async (searchQuery, loadedOptions, { page }) => {
     try {
@@ -170,80 +280,100 @@ const EditProduct = () => {
     setCategoryId(selectedOption);
   };
 
-  const handleFileChange = (event, setFieldValue) => {
-    const files = Array.from(event.target.files);
-    if (files.length + selectedFiles.length + existingImages.length > 5) {
-      toast.error("You can upload maximum 5 images in total");
-      return;
-    }
-    
-    setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setPreviewImages((prevPreviews) => [...prevPreviews, ...previews]);
-    setFieldValue("images", [...selectedFiles, ...files]);
-  };
 
-  const handleBannerChange = (event, setFieldValue) => {
-    const file = event.target.files[0];
-    if (file) {
-      setBannerImage(file);
-      setBannerPreview(URL.createObjectURL(file));
-      setFieldValue("bannerImage", file);
-    }
-  };
+  const handleAltTextChange = (index, value, setFieldValue) => {
+    const newAltTexts = [...altTexts];
+    newAltTexts[index] = value;
+    setAltTexts(newAltTexts);
 
-  const handleRemoveImage = (index, type, setFieldValue) => {
-    if (type === 'existing') {
-      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    // Update Formik field value
+    if (index < existingImages.length) {
+      // For existing images
+      const updatedExisting = [...existingImages];
+      updatedExisting[index].altText = value;
+      setExistingImages(updatedExisting);
     } else {
-      setPreviewImages((prev) => prev.filter((_, i) => i !== index));
-      const newFiles = selectedFiles.filter((_, i) => i !== index);
-      setSelectedFiles(newFiles);
-      setFieldValue("images", newFiles);
+      // For new images
+      const newIndex = index - existingImages.length;
+      setFieldValue(`images[${newIndex}].altText`, value);
     }
   };
 
-  const handleRemoveBanner = (setFieldValue) => {
-    setBannerImage(null);
-    setBannerPreview("");
-    setExistingBanner("");
-    setFieldValue("bannerImage", null);
+  const handlebannerImageAltTextChange = (value, setFieldValue) => {
+    setbannerImageAltText(value);
+    if (bannerImage) {
+      setFieldValue("bannerImage.altText", value);
+    } else if (existingBanner) {
+      // Update alt text for existing banner
+      setFieldValue("bannerImage.altText", value);
+    }
   };
 
   const validationSchema = Yup.object().shape({
-    name: Yup.string().optional(),
+    name: Yup.string().required("Name is required"),
     actualPrice: Yup.number()
-      .optional()
+      .required("Price is required")
       .positive("Price must be positive"),
-    size: Yup.string().optional(),
-    description: Yup.string().optional(),
-    bannerTitle: Yup.string().optional(),
-    bannerContent: Yup.string().optional(),
+    size: Yup.string().required("Size is required"),
+    description: Yup.string().required("Description is required"),
+    bannerTitle: Yup.string().required("Banner title is required"),
+    bannerContent: Yup.string().required("Banner content is required"),
+    images: Yup.array()
+      .test(
+        "alt-text-required",
+        "Alt text is required for all images",
+        function (images) {
+          return altTexts.every(text => text && text.trim() !== "");
+        }
+      ),
+    bannerImage: Yup.object()
+      .test(
+        "banner-alt-text-required",
+        "Banner alt text is required",
+        function (value) {
+          return bannerImageAltText && bannerImageAltText.trim() !== "";
+        }
+      )
   });
 
   const onSubmit = async (values, { resetForm }) => {
     setLoader(true);
-
     const formData = new FormData();
-    
-    // Append new images
-    selectedFiles.forEach((file) => {
+
+    // Append product images
+    selectedFiles.forEach((file, index) => {
       formData.append("images", file);
+      formData.append("altTexts", altTexts[existingImages.length + index] || formatFileName(file.name));
+      formData.append("originalPaths", file.name);
     });
-    
-    // Append banner image if changed
+
+    // Append existing images alt texts
+    existingImages.forEach((img, index) => {
+      formData.append("existingImages", JSON.stringify({
+        url: img.url,
+        altText: altTexts[index] || formatFileName(img.originalPath),
+        originalPath: img.originalPath
+      }));
+    });
+
+    // Append banner image
     if (bannerImage) {
       formData.append("bannerImage", bannerImage);
+      formData.append("bannerImageAltText", bannerImageAltText || formatFileName(bannerImage.name));
+      formData.append("bannerOriginalPath", bannerImage.name);
+    } else if (existingBanner) {
+      formData.append("existingBanner", JSON.stringify({
+        url: initialValues.bannerImage.url,
+        altText: bannerImageAltText || formatFileName(initialValues.bannerImage.originalPath),
+        originalPath: initialValues.bannerImage.originalPath
+      }));
     }
-    
-    // Append only changed fields
+
+    // Append other changed fields
     Object.keys(values).forEach((key) => {
-      if (key !== "images" && 
-          key !== "bannerImage" && 
-          values[key] !== undefined && 
-          values[key] !== null && 
-          values[key] !== "" && 
-          values[key] !== initialValues[key]) {
+      if (key !== "images" && key !== "bannerImage" &&
+        values[key] !== undefined && values[key] !== null &&
+        values[key] !== "" && values[key] !== initialValues[key]) {
         formData.append(key, values[key]);
       }
     });
@@ -251,14 +381,10 @@ const EditProduct = () => {
     if (brandId && brandId.value !== initialValues.brandId) {
       formData.append("brandId", brandId.value);
     }
-    
+
     if (categoryId && categoryId.value !== initialValues.categoryId) {
       formData.append("categoryId", categoryId.value);
     }
-
-    // if (existingImages.length > 0) {
-    //   formData.append("existingImages", JSON.stringify(existingImages));
-    // }
 
     try {
       const response = await axios.put(`${Base_url}/products/update/${id}`, formData);
@@ -298,10 +424,15 @@ const EditProduct = () => {
             validationSchema={validationSchema}
             enableReinitialize
             onSubmit={onSubmit}
+
+
           >
             {({ handleSubmit, setFieldValue, values, errors, touched }) => (
+
+
               <Form onSubmit={handleSubmit}>
                 <div className="flex gap-5 justify-between flex-wrap">
+                  {/* Brand Selector */}
                   <div className="w-[49%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Brand
@@ -323,7 +454,8 @@ const EditProduct = () => {
                       className="text-red text-sm mt-1"
                     />
                   </div>
-                  
+
+                  {/* Category Selector */}
                   <div className="md:w-[48%] w-full">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Category
@@ -346,6 +478,7 @@ const EditProduct = () => {
                     />
                   </div>
 
+                  {/* Product Name */}
                   <div className="md:w-[48%] w-full">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Product Name
@@ -362,7 +495,101 @@ const EditProduct = () => {
                       className="text-red text-sm mt-1"
                     />
                   </div>
+                  {/* Slug */}
+                  <div className="md:w-[48%] w-full">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                      Slug
+                    </label>
+                    <Field
+                      name="slug"
+                      type="text"
+                      placeholder="Enter slug"
+                      className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    />
+                    <ErrorMessage
+                      name="slug"
+                      component="div"
+                      className="text-red text-sm mt-1"
+                    />
+                  </div>
 
+                  {/* Meta Title */}
+                  <div className="md:w-[48%] w-full">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                      Meta Title
+                    </label>
+                    <Field
+                      name="metaTitle"
+                      type="text"
+                      placeholder="Enter meta title"
+                      className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    />
+                    <ErrorMessage
+                      name="metaTitle"
+                      component="div"
+                      className="text-red text-sm mt-1"
+                    />
+                  </div>
+
+                  {/* Meta Description */}
+                  <div className="w-full">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                      Meta Description
+                    </label>
+                    <Field
+                      name="metaDescription"
+                      as="textarea"
+                      rows={3}
+                      placeholder="Enter meta description"
+                      className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    />
+                    <ErrorMessage
+                      name="metaDescription"
+                      component="div"
+                      className="text-red text-sm mt-1"
+                    />
+                  </div>
+
+                  {/* Keywords */}
+                  <div className="md:w-[48%] w-full">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                      Keywords
+                    </label>
+                    <Field
+                      name="keywords"
+                      type="text"
+                      placeholder="Enter keywords, separated by commas"
+                      className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    />
+                    <ErrorMessage
+                      name="keywords"
+                      component="div"
+                      className="text-red text-sm mt-1"
+                    />
+                  </div>
+
+                  {/* Robots */}
+                  <div className="md:w-[48%] w-full">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                      Robots
+                    </label>
+                    <Field
+                      name="robots"
+                      as="select"
+                      className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    >
+                      <option value="index, follow">Index, Follow</option>
+                      <option value="noindex, follow">Noindex, Follow</option>
+                      <option value="index, nofollow">Index, Nofollow</option>
+                      <option value="noindex, nofollow">Noindex, Nofollow</option>
+                    </Field>
+                    <ErrorMessage
+                      name="robots"
+                      component="div"
+                      className="text-red text-sm mt-1"
+                    />
+                  </div>
+                  {/* Price */}
                   <div className="md:w-[48%] w-full">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Price
@@ -380,6 +607,7 @@ const EditProduct = () => {
                     />
                   </div>
 
+                  {/* Size */}
                   <div className="w-full">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Size
@@ -396,7 +624,8 @@ const EditProduct = () => {
                       className="text-red text-sm mt-1"
                     />
                   </div>
-                  
+
+                  {/* Images Upload */}
                   <div className="w-[100%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Upload Images (Max 5 total)
@@ -411,12 +640,24 @@ const EditProduct = () => {
                     <div className="flex flex-wrap gap-4 mt-3">
                       {/* Existing images */}
                       {existingImages.map((image, index) => (
-                        <div key={`existing-${index}`} className="relative">
+                        <div key={`existing-${index}`} className="relative w-64">
                           <img
-                            src={`${Base_url}/${image}`}
+                            src={`${Base_url}/${image.url}`}
                             alt="Preview"
-                            className="w-24 h-24 object-cover rounded-md shadow-md"
+                            className="w-full h-48 object-contain rounded-md shadow-md"
                           />
+                          <div className="mt-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Alt Text
+                            </label>
+                            <input
+                              type="text"
+                              value={altTexts[index] || ""}
+                              onChange={(e) => handleAltTextChange(index, e.target.value, setFieldValue)}
+                              className="border w-full bg-lightGray py-2 px-2 rounded-md text-sm"
+                              placeholder={formatFileName(image.originalPath)}
+                            />
+                          </div>
                           <button
                             type="button"
                             className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
@@ -424,19 +665,32 @@ const EditProduct = () => {
                           >
                             <MdClose size={20} />
                           </button>
-                          <span className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                          <span className="absolute top-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
                             Existing
                           </span>
                         </div>
                       ))}
-                      
+
+                      {/* New images */}
                       {previewImages.map((image, index) => (
-                        <div key={`new-${index}`} className="relative">
+                        <div key={`new-${index}`} className="relative w-64">
                           <img
                             src={image}
                             alt="Preview"
-                            className="w-24 h-24 object-cover rounded-md shadow-md"
+                            className="w-full h-48 object-contain rounded-md shadow-md"
                           />
+                          <div className="mt-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                              Alt Text
+                            </label>
+                            <input
+                              type="text"
+                              value={altTexts[existingImages.length + index] || ""}
+                              onChange={(e) => handleAltTextChange(existingImages.length + index, e.target.value, setFieldValue)}
+                              className="border w-full bg-lightGray py-2 px-2 rounded-md text-sm"
+                              placeholder={formatFileName(selectedFiles[index]?.name)}
+                            />
+                          </div>
                           <button
                             type="button"
                             className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
@@ -444,7 +698,7 @@ const EditProduct = () => {
                           >
                             <MdClose size={20} />
                           </button>
-                          <span className="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
+                          <span className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
                             New
                           </span>
                         </div>
@@ -456,6 +710,8 @@ const EditProduct = () => {
                       className="text-red text-sm mt-1"
                     />
                   </div>
+
+                  {/* Description */}
                   <div className="w-[100%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Product Description
@@ -474,6 +730,8 @@ const EditProduct = () => {
                       className="text-red text-sm mt-1"
                     />
                   </div>
+
+                  {/* Banner Title */}
                   <div className="w-[100%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Banner Title
@@ -490,51 +748,64 @@ const EditProduct = () => {
                       className="text-red text-sm mt-1"
                     />
                   </div>
+
+                  {/* Banner Image */}
                   <div className="w-[100%]">
-  <label className="block mb-2 text-sm font-medium text-gray-900">
-    Banner Image
-  </label>
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => handleBannerChange(e, setFieldValue)}
-    className="block w-full p-3 text-sm text-gray-900 border rounded-md cursor-pointer focus:outline-none"
-  />
-  {(bannerPreview || existingBanner) && (
-    <div className="relative w-40 h-40 mt-3">
-      <img
-        src={bannerPreview || existingBanner}
-        alt="Banner Preview"
-        className="h-40 w-40 object-cover rounded-md shadow-md"
-      />
-      <button
-        type="button"
-        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
-        onClick={() => handleRemoveBanner(setFieldValue)}
-      >
-        <MdClose size={20} />
-      </button>
-      {existingBanner && !bannerPreview && (
-        <span className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
-          Existing
-        </span>
-      )}
-      {bannerPreview && (
-        <span className="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
-          New
-        </span>
-      )}
-    </div>
-  )}
-  <ErrorMessage
-    name="bannerImage"
-    component="div"
-    className="text-red text-sm mt-1"
-  />
-</div>
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                      Banner Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleBannerChange(e, setFieldValue)}
+                      className="block w-full p-3 text-sm text-gray-900 border rounded-md cursor-pointer focus:outline-none"
+                    />
+                    {(bannerPreview || existingBanner) && (
+                      <div className="relative w-64 mt-3">
+                        <img
+                          src={bannerPreview || existingBanner}
+                          alt="Banner Preview"
+                          className="w-full h-48 object-contain rounded-md shadow-md"
+                        />
+                        <div className="mt-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Banner Alt Text
+                          </label>
+                          <input
+                            type="text"
+                            value={bannerImageAltText || values.bannerImageAltText}
+                            onChange={(e) => handlebannerImageAltTextChange(e.target.value, setFieldValue)}
+                            className="border w-full bg-lightGray py-2 px-2 rounded-md text-sm"
 
-                 
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
+                          onClick={() => handleRemoveBanner(setFieldValue)}
+                        >
+                          <MdClose size={20} />
+                        </button>
+                        {existingBanner && !bannerPreview && (
+                          <span className="absolute top-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                            Existing
+                          </span>
+                        )}
+                        {bannerPreview && (
+                          <span className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
+                            New
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <ErrorMessage
+                      name="bannerImage"
+                      component="div"
+                      className="text-red text-sm mt-1"
+                    />
+                  </div>
 
+                  {/* Banner Content */}
                   <div className="w-[100%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Banner Content
@@ -553,10 +824,9 @@ const EditProduct = () => {
                       className="text-red text-sm mt-1"
                     />
                   </div>
-
-                
                 </div>
 
+                {/* Submit Button */}
                 <div className="flex justify-center items-center mt-6">
                   {loading ? (
                     <button

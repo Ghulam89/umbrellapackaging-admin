@@ -15,6 +15,8 @@ const HomeBanner = () => {
   const [bannerId, setBannerId] = useState(null);
   const [bannerExists, setBannerExists] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+    const [imageAltText, setImageAltText] = useState("");
+
   const [modifiedFields, setModifiedFields] = useState({
     description: false,
     videoLink: false,
@@ -60,12 +62,16 @@ const HomeBanner = () => {
     setIsFetching(true);
     try {
       const response = await axios.get(`${Base_url}/banner/getAll`);
+      console.log(response);
+      
       if (response.data && response.data.data) {
         const banners = response.data.data;
         const firstBanner = banners?.[0] || {};
         setBannerId(firstBanner?._id);
         setDescription(firstBanner?.description || "");
         setVideoLink(firstBanner?.videoLink || "");
+              setImageAltText(firstBanner?.imageAltText || ""); 
+
         const imagePath = firstBanner?.image;
         setPreviewImage(
           imagePath 
@@ -118,7 +124,9 @@ const HomeBanner = () => {
     if (modifiedFields.videoLink || !bannerExists) {
       formData.append("videoLink", videoLink);
     }
-
+ if (imageAltText) {
+    formData.append("imageAltText", imageAltText);
+  }
     if (image) {
       formData.append("image", image);
     }
@@ -174,6 +182,8 @@ const HomeBanner = () => {
       return;
     }
 
+
+
     // Clear previous image if exists
     if (previewImage) {
       URL.revokeObjectURL(previewImage);
@@ -182,6 +192,13 @@ const HomeBanner = () => {
     setImage(file);
     setModifiedFields(prev => ({...prev, image: true}));
     setPreviewImage(URL.createObjectURL(file));
+
+  const altText = file.name
+    .replace(/\.[^/.]+$/, "") 
+    .replace(/[-_]/g, ' ')    
+    .trim();               
+  setImageAltText(altText);
+
   };
 
   const handleClearImage = () => {
@@ -190,6 +207,7 @@ const HomeBanner = () => {
     }
     setImage(null);
     setPreviewImage(null);
+      setImageAltText("");
     setModifiedFields(prev => ({...prev, image: true}));
   };
 
@@ -204,6 +222,7 @@ const HomeBanner = () => {
       setImage(null);
       setPreviewImage(null);
       setBannerExists(false);
+        setImageAltText("");
       setModifiedFields({
         description: false,
         videoLink: false,
@@ -262,6 +281,7 @@ const HomeBanner = () => {
                 <p className="text-xs text-gray-500 mt-1">Max file size: 5MB</p>
 
                 {previewImage ? (
+                  <>
                   <div className="my-3">
                     <div className="w-40 h-40 border rounded-md relative">
                       <img
@@ -278,6 +298,19 @@ const HomeBanner = () => {
                       </button>
                     </div>
                   </div>
+
+                   <div className="w-[100%] mt-3">
+                      <Input
+                        label={"Alt Text"}
+                        name={"imageAltText"}
+                        value={imageAltText}
+                        onChange={(e) => setImageAltText(e.target.value)}
+                        className={"border w-full py-3"}
+                        defaultValue={image?.name?.replace(/\.[^/.]+$/, "").replace(/-/g, ' ') || imageAltText}
+                      />
+                    </div>
+                  </>
+                  
                 ) : (
                   <p className="mb-3 text-sm text-gray-500">
                     No image selected

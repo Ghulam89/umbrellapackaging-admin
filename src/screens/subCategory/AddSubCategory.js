@@ -18,9 +18,24 @@ const AddSubCategory = ({
   isEditMode = false,
   editData = {},
 }) => {
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/\s+/g, '-')     // Replace spaces with -
+      .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+      .replace(/\-\-+/g, '-')   // Replace multiple - with single -
+      .replace(/^-+/, '')       // Trim - from start of text
+      .replace(/-+$/, '');      // Trim - from end of text
+  };
   const [isLoading, setIsLoading] = useState(false);
+
   const [brandId, setBrandId] = useState("");
   const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState(editData?.slug || generateSlug(editData?.title || ""));
+   const [metaTitle, setMetaTitle] = useState(editData?.metaTitle || "");  
+      const [metaDescription, setMetaDescription] = useState(editData?.metaDescription || "");  
+      const [keywords, setkeywords] = useState(editData?.keywords || "");  
+      const [robots, setRobots] = useState(editData?.robots || "index, follow"); 
   const [subTitle, setSubTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoDescription, setVideoDescription] = useState("");
@@ -30,6 +45,13 @@ const AddSubCategory = ({
   const [imagePreview, setImagePreview] = useState("");
   const [videoLink, setVideoLink] = useState("");
   const [selectedBrand, setSelectedBrand] = useState(null);
+  const [imageAltText, setImageAltText] = useState("");
+  const [iconAltText, setIconAltText] = useState("");
+  const [bannerImageFirstAltText, setBannerImageFirstAltText] = useState("");
+  const [bannerImageSecondAltText, setBannerImageSecondAltText] = useState("");
+  const [bannerImageThirdAltText, setBannerImageThirdAltText] = useState("");
+  const [bannerImageFourthAltText, setBannerImageFourthAltText] = useState("");
+
 
   // New banner fields
   const [bannerTitleFirst, setBannerTitleFirst] = useState("");
@@ -89,6 +111,11 @@ const AddSubCategory = ({
     if (isEditMode && editData) {
       setBrandId(editData?.brandId?._id || "");
       setTitle(editData?.title || "");
+      setSlug(editData?.slug || generateSlug(editData?.title || ""));
+         setMetaTitle(editData?.metaTitle || "");
+        setMetaDescription(editData?.metaDescription || "");
+        setkeywords(editData?.keywords || "");
+        setRobots(editData?.robots || "");
       setSubTitle(editData?.subTitle || "");
       setDescription(editData?.description || "");
       setVideoLink(editData?.videoLink || "");
@@ -101,6 +128,12 @@ const AddSubCategory = ({
       setBannerContentThird(editData?.bannerContentThird || "");
       setBannerTitleFourth(editData?.bannerTitleFourth || "");
       setBannerContentFourth(editData?.bannerContentFourth || "");
+      setImageAltText(editData?.imageAltText || "");
+      setIconAltText(editData?.iconAltText || "");
+      setBannerImageFirstAltText(editData?.bannerImageFirstAltText || "");
+      setBannerImageSecondAltText(editData?.bannerImageSecondAltText || "");
+      setBannerImageThirdAltText(editData?.bannerImageThirdAltText || "");
+      setBannerImageFourthAltText(editData?.bannerImageFourthAltText || "");
 
       if (editData?.icon) {
         setIconPreview(`${Base_url}/${editData.icon}`);
@@ -115,10 +148,10 @@ const AddSubCategory = ({
         setBannerImageSecondPreview(`${Base_url}/${editData.bannerImageSecond}`);
       }
       if (editData?.bannerImageThird) {
-        setBannerImageThirdPreview(`${Base_url}/${editData.bannerImageThird }`);
+        setBannerImageThirdPreview(`${Base_url}/${editData.bannerImageThird}`);
       }
       if (editData?.bannerImageFourth) {
-        setBannerImageFourthPreview(`${Base_url}/${editData.bannerImageFourth }`);
+        setBannerImageFourthPreview(`${Base_url}/${editData.bannerImageFourth}`);
       }
 
       if (editData?.brandId?._id) {
@@ -132,7 +165,11 @@ const AddSubCategory = ({
     }
   }, [isEditMode, editData]);
 
-
+  useEffect(() => {
+    if (!isEditMode || !editData?.slug) {
+      setSlug(generateSlug(title));
+    }
+  }, [title, isEditMode, editData?.slug]);
 
   const resetState = () => {
     setBrandId("");
@@ -146,13 +183,16 @@ const AddSubCategory = ({
     setVideoLink("");
     setVideoDescription("");
     setSelectedBrand(null);
-
+    setSlug("");
     // Reset banner fields
     setBannerTitleFirst("");
     setBannerContentFirst("");
     setBannerImageFirst(null);
     setBannerImageFirstPreview("");
-
+        setMetaTitle("")
+     setMetaDescription("")
+     setkeywords("")
+     setRobots("");
     setBannerTitleSecond("");
     setBannerContentSecond("");
     setBannerImageSecond(null);
@@ -167,13 +207,22 @@ const AddSubCategory = ({
     setBannerContentFourth("");
     setBannerImageFourth(null);
     setBannerImageFourthPreview("");
+
+    setImageAltText("");
+    setIconAltText("");
+    setBannerImageFirstAltText("");
+    setBannerImageSecondAltText("");
+    setBannerImageThirdAltText("");
+    setBannerImageFourthAltText("");
   };
 
-  const handleImageChange = (e, setImage, setPreview) => {
+  const handleImageChange = (e, setImage, setPreview, setAltText) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
+      const fileName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').trim();
+      setAltText(fileName);
     }
   };
 
@@ -213,6 +262,11 @@ const AddSubCategory = ({
     }
 
     if (!isEditMode || title !== editData?.title) formData.append("title", title);
+    if (!isEditMode || slug !== editData?.title) formData.append("slug", slug);
+    if (!isEditMode || metaTitle !== editData?.metaTitle) formData.append("metaTitle", metaTitle);
+      if (!isEditMode || metaDescription !== editData?.metaDescription) formData.append("metaDescription", metaDescription);
+      if (!isEditMode || keywords !== editData?.keywords) formData.append("keywords", keywords); 
+      if (!isEditMode || robots !== editData?.robots) formData.append("robots", robots); 
     if (!isEditMode || subTitle !== editData?.subTitle) formData.append("subTitle", subTitle);
     if (!isEditMode || description !== editData?.description) formData.append("description", description);
     if (!isEditMode || videoLink !== editData?.videoLink) formData.append("videoLink", videoLink);
@@ -225,7 +279,12 @@ const AddSubCategory = ({
     if (!isEditMode || bannerContentThird !== editData?.bannerContentThird) formData.append("bannerContentThird", bannerContentThird);
     if (!isEditMode || bannerTitleFourth !== editData?.bannerTitleFourth) formData.append("bannerTitleFourth", bannerTitleFourth);
     if (!isEditMode || bannerContentFourth !== editData?.bannerContentFourth) formData.append("bannerContentFourth", bannerContentFourth);
-
+    if (!isEditMode || imageAltText !== editData?.imageAltText) formData.append("imageAltText", imageAltText);
+    if (!isEditMode || iconAltText !== editData?.iconAltText) formData.append("iconAltText", iconAltText);
+    if (!isEditMode || bannerImageFirstAltText !== editData?.bannerImageFirstAltText) formData.append("bannerImageFirstAltText", bannerImageFirstAltText);
+    if (!isEditMode || bannerImageSecondAltText !== editData?.bannerImageSecondAltText) formData.append("bannerImageSecondAltText", bannerImageSecondAltText);
+    if (!isEditMode || bannerImageThirdAltText !== editData?.bannerImageThirdAltText) formData.append("bannerImageThirdAltText", bannerImageThirdAltText);
+    if (!isEditMode || bannerImageFourthAltText !== editData?.bannerImageFourthAltText) formData.append("bannerImageFourthAltText", bannerImageFourthAltText);
     if (image && (!isEditMode || (image instanceof File))) {
       formData.append("image", image);
     }
@@ -275,6 +334,31 @@ const AddSubCategory = ({
     }
   };
 
+
+
+  const handleBannerImageChange = (e, bannerNumber) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const setImage = bannerNumber === 1 ? setBannerImageFirst :
+      bannerNumber === 2 ? setBannerImageSecond :
+        bannerNumber === 3 ? setBannerImageThird : setBannerImageFourth;
+
+    const setImagePreview = bannerNumber === 1 ? setBannerImageFirstPreview :
+      bannerNumber === 2 ? setBannerImageSecondPreview :
+        bannerNumber === 3 ? setBannerImageThirdPreview : setBannerImageFourthPreview;
+
+    const setAltText = bannerNumber === 1 ? setBannerImageFirstAltText :
+      bannerNumber === 2 ? setBannerImageSecondAltText :
+        bannerNumber === 3 ? setBannerImageThirdAltText : setBannerImageFourthAltText;
+
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
+
+    const fileName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').trim();
+    setAltText(fileName);
+  };
+
   const renderBannerSection = (number) => {
     const titleState = number === 1 ? bannerTitleFirst :
       number === 2 ? bannerTitleSecond :
@@ -298,6 +382,15 @@ const AddSubCategory = ({
       number === 2 ? setBannerImageSecondPreview :
         number === 3 ? setBannerImageThirdPreview : setBannerImageFourthPreview;
 
+    const altTextState = number === 1 ? bannerImageFirstAltText :
+      number === 2 ? bannerImageSecondAltText :
+        number === 3 ? bannerImageThirdAltText : bannerImageFourthAltText;
+    const setAltText = number === 1 ? setBannerImageFirstAltText :
+      number === 2 ? setBannerImageSecondAltText :
+        number === 3 ? setBannerImageThirdAltText : setBannerImageFourthAltText;
+    const bannerImage = number === 1 ? bannerImageFirst :
+      number === 2 ? bannerImageSecond :
+        number === 3 ? bannerImageThird : bannerImageFourth;
     return (
       <div className="w-full border p-4 rounded-md mb-4">
         <h3 className="font-semibold mb-3">Banner {number}</h3>
@@ -332,18 +425,38 @@ const AddSubCategory = ({
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => handleImageChange(e, setImage, setImagePreview)}
+              onChange={(e) => handleBannerImageChange(e, number)}
               className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
             />
 
             {imagePreview ? (
-              <div className="mb-3 mt-3 h-40 w-40 border rounded-md">
-                <img
-                  src={imagePreview}
-                  alt={`Banner ${number}`}
-                  className=" h-40 w-40 object-cover rounded-md"
-                />
-              </div>
+              <>
+                <div className="mb-3 mt-3 h-40 w-40 border rounded-md">
+                  <img
+                    src={imagePreview}
+                    alt={`Banner ${number}`}
+                    className=" h-40 w-40 object-cover rounded-md"
+                  />
+                </div>
+                <div className="w-[100%] mt-3">
+                  <Input
+                    label={"Alt Text"}
+                    name={`bannerImage${number}AltText`}
+                    value={altTextState}
+                    onChange={(e) => setAltText(e.target.value)}
+                    className={"border w-full py-3"}
+                    defaultValue={
+                      bannerImage?.name
+                        ? bannerImage.name
+                          .replace(/\.[^/.]+$/, "")
+                          .replace(/[-_]/g, ' ')
+                          .trim()
+                        : altTextState
+                    }
+                  />
+                </div>
+              </>
+
             ) : (
               <p className="mb-3 mt-3 text-sm text-gray-500">No image selected</p>
             )}
@@ -401,6 +514,63 @@ const AddSubCategory = ({
                   required={true}
                 />
               </div>
+              <div className="w-[100%]">
+                <Input
+                  label={"Slug"}
+                  name={"slug"}
+                  value={slug}
+                  onChange={(e) => setSlug(generateSlug(e.target.value))}
+                  className={"border w-full py-3"}
+                  defaultValue={slug}
+                  disabled={!isEditMode}
+                />
+              </div>
+                <div className="w-[100%]">
+                  <Input
+                    label={"Meta Title"}
+                    name={"metaTitle"}
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    className={"border w-full py-3"}
+                    defaultValue={metaTitle}
+                    disabled={!isEditMode}
+                  />
+                </div>
+                 <div className="w-[100%]">
+                  <Input
+                    label={"Meta Description"}
+                    name={"metaDescription"}
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    className={"border w-full py-3"}
+                    defaultValue={metaDescription}
+                    disabled={!isEditMode}
+                  />
+                </div>
+
+                 <div className="w-[100%]">
+                  <Input
+                    label={"Keywords"}
+                    name={"keywords"}
+                    value={keywords}
+                    onChange={(e) => setkeywords(e.target.value)}
+                    className={"border w-full py-3"}
+                    defaultValue={keywords}
+                    disabled={!isEditMode}
+                  />
+                </div>
+
+                 <div className="w-[100%]">
+                  <Input
+                    label={"robots"}
+                    name={"robots"}
+                    value={robots}
+                    onChange={(e) => setRobots(e.target.value)}
+                    className={"border w-full py-3"}
+                    disabled={!isEditMode}
+                    defaultValue={robots}
+                  />
+                </div>
 
               <div className="w-full">
                 <Input
@@ -433,17 +603,30 @@ const AddSubCategory = ({
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageChange(e, setImage, setImagePreview)}
+                  onChange={(e) => handleImageChange(e, setImage, setImagePreview, setImageAltText)}
                   className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
                 />
                 {(imagePreview || image) ? (
-                  <div className="mb-3 mt-3 w-40 h-40 border rounded-md">
-                    <img
-                      src={imagePreview || (typeof image === 'string' ? image : URL.createObjectURL(image))}
-                      alt="Selected"
-                      className="w-40 h-40 object-cover rounded-md"
-                    />
-                  </div>
+                  <>
+                    <div className="mb-3 mt-3 w-40 h-40 border rounded-md">
+                      <img
+                        src={imagePreview || (typeof image === 'string' ? image : URL.createObjectURL(image))}
+                        alt="Selected"
+                        className="w-40 h-40 object-cover rounded-md"
+                      />
+                    </div>
+                    <div className="w-[100%] mt-3">
+                      <Input
+                        label={"Alt Text"}
+                        name={"imageAltText"}
+                        value={imageAltText}
+                        onChange={(e) => setImageAltText(e.target.value)}
+                        className={"border w-full py-3"}
+                        defaultValue={image?.name?.replace(/\.[^/.]+$/, "").replace(/-/g, ' ') || imageAltText}
+                      />
+                    </div>
+                  </>
+
                 ) : (
                   <p className="mb-3 mt-3 text-sm text-gray-500">No image selected</p>
                 )}
@@ -455,17 +638,31 @@ const AddSubCategory = ({
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageChange(e, setIcon, setIconPreview)}
+                  onChange={(e) => handleImageChange(e, setIcon, setIconPreview, setIconAltText)}
                   className="border w-full py-3 outline-none bg-lightGray p-2.5 text-black placeholder:text-black rounded-md"
                 />
                 {(iconPreview || icon) ? (
-                  <div className="mb-3  w-32 h-32 mt-3 border rounded-md">
-                    <img
-                      src={iconPreview || (typeof icon === 'string' ? icon : URL.createObjectURL(icon))}
-                      alt="Selected Icon"
-                      className="w-32  h-32  object-contain rounded-md"
-                    />
-                  </div>
+                  <>
+                    <div className="mb-3  w-32 h-32 mt-3 border rounded-md">
+                      <img
+                        src={iconPreview || (typeof icon === 'string' ? icon : URL.createObjectURL(icon))}
+                        alt="Selected Icon"
+                        className="w-32  h-32  object-contain rounded-md"
+                      />
+                    </div>
+                    <div className="w-[100%] mt-3">
+                      <Input
+                        label={"Alt Text"}
+                        name={"iconAltText"}
+                        value={iconAltText}
+                        onChange={(e) => setIconAltText(e.target.value)}
+                        className={"border w-full py-3"}
+                        defaultValue={icon?.name?.replace(/\.[^/.]+$/, "").replace(/-/g, ' ') || iconAltText}
+                      />
+                    </div>
+
+                  </>
+
                 ) : (
                   <p className="mb-3 text-sm text-gray-500">No icon selected</p>
                 )}

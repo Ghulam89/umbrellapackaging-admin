@@ -38,7 +38,7 @@ const Dashboard = () => {
       });
 
     axios
-      .get(`${Base_url}/product/getAll`)
+      .get(`${Base_url}/products/getAll`)
       .then((res) => {
         console.log(res);
         setProduct(res.data.totalProducts);

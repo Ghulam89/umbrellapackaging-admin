@@ -12,6 +12,17 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 const AddProduct = () => {
+
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')   
+      .replace(/^-+/, '')      
+      .replace(/-+$/, '');    
+  };
+
   const navigate = useNavigate();
   const [loading, setLoader] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
@@ -20,13 +31,13 @@ const AddProduct = () => {
   const [categoryId, setCategoryId] = useState(null);
   const [bannerImage, setBannerImage] = useState(null);
   const [bannerPreview, setBannerPreview] = useState("");
-
-  // ReactQuill modules configuration
+  const [altTexts, setAltTexts] = useState([]);
+  const [bannerAltText, setBannerAltText] = useState("");
   const quillModules = {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       ['link', 'image'],
       ['clean']
     ],
@@ -39,6 +50,23 @@ const AddProduct = () => {
     'link', 'image'
   ];
 
+  // Add this utility function at the top of your component
+  const formatFileName = (fileName) => {
+    if (!fileName) return '';
+
+    return fileName
+      .replace(/\.[^/.]+$/, '')  // Remove file extension
+      .replace(/[_-]/g, ' ')     // Replace all underscores and dashes with spaces
+      .replace(/\s+/g, ' ')       // Collapse multiple spaces to single space
+      .trim()                    // Trim whitespace from both ends
+      .split(' ')                // Split into words
+      .map(word =>
+        word.length > 0
+          ? word[0].toUpperCase() + word.slice(1).toLowerCase()
+          : ''
+      )
+      .join(' ');                // Rejoin words with single spaces
+  };
   const loadOptions = async (searchQuery, loadedOptions, { page }) => {
     try {
       const response = await axios.get(`${Base_url}/brands/getAll`, {
@@ -107,11 +135,23 @@ const AddProduct = () => {
       toast.error("You can upload maximum 5 images");
       return;
     }
-    
-    setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setPreviewImages((prevPreviews) => [...prevPreviews, ...previews]);
-    setFieldValue("images", [...selectedFiles, ...files]);
+
+    const newFiles = [...selectedFiles, ...files];
+    setSelectedFiles(newFiles);
+
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setPreviewImages((prev) => [...prev, ...newPreviews]);
+
+    // Initialize alt texts with formatted file names
+    const newAltTexts = [...altTexts, ...files.map(file => formatFileName(file.name))];
+    setAltTexts(newAltTexts);
+
+    // Update Formik field value
+    setFieldValue("images", newFiles.map((file, index) => ({
+      url: file,
+      altText: newAltTexts[index],
+      originalPath: file.name
+    })));
   };
 
   const handleBannerChange = (event, setFieldValue) => {
@@ -119,25 +159,71 @@ const AddProduct = () => {
     if (file) {
       setBannerImage(file);
       setBannerPreview(URL.createObjectURL(file));
-      setFieldValue("bannerImage", file);
+      setBannerAltText(formatFileName(file.name));
+      setFieldValue("bannerImage", {
+        url: file,
+        altText: formatFileName(file.name),
+        originalPath: file.name
+      });
     }
   };
 
   const handleRemoveImage = (index, setFieldValue) => {
-    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
-    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    const newFiles = [...selectedFiles];
+    newFiles.splice(index, 1);
     setSelectedFiles(newFiles);
-    setFieldValue("images", newFiles);
+
+    const newPreviews = [...previewImages];
+    newPreviews.splice(index, 1);
+    setPreviewImages(newPreviews);
+
+    const newAltTexts = [...altTexts];
+    newAltTexts.splice(index, 1);
+    setAltTexts(newAltTexts);
+
+    setFieldValue("images", newFiles.map((file, i) => ({
+      url: file,
+      altText: newAltTexts[i] || "",
+      originalPath: file.name
+    })));
+  };
+
+  const handleAltTextChange = (index, value, setFieldValue) => {
+    const newAltTexts = [...altTexts];
+    newAltTexts[index] = value;
+    setAltTexts(newAltTexts);
+
+    setFieldValue("images", selectedFiles.map((file, i) => ({
+      url: file,
+      altText: newAltTexts[i] || "",
+      originalPath: file.name
+    })));
+  };
+
+  const handleBannerAltTextChange = (value, setFieldValue) => {
+    setBannerAltText(value);
+    if (bannerImage) {
+      setFieldValue("bannerImage", {
+        url: bannerImage,
+        altText: value,
+        originalPath: bannerImage.name
+      });
+    }
   };
 
   const handleRemoveBanner = (setFieldValue) => {
     setBannerImage(null);
     setBannerPreview("");
+    setBannerAltText("");
     setFieldValue("bannerImage", null);
   };
 
   const validationSchema = Yup.object().shape({
     name: Yup.string().required("Name is required"),
+     metaTitle: Yup.string().required("Meta Title is required"),
+     metaDescription: Yup.string().required("Meta Description is required"),
+     keywords: Yup.string().required("Keywords is required"),
+    robots:Yup.string().required("Robots is required"),
     actualPrice: Yup.number()
       .required("Price is required")
       .positive("Price must be positive"),
@@ -145,10 +231,23 @@ const AddProduct = () => {
     description: Yup.string().required("Description is required"),
     images: Yup.array()
       .min(1, "At least one image is required")
-      .max(5, "Maximum 5 images allowed"),
+      .max(5, "Maximum 5 images allowed")
+      .test(
+        "alt-text-required",
+        "Alt text is required for all images",
+        function (images) {
+          return images.every(img => img.altText && img.altText.trim() !== "");
+        }
+      ),
     brandId: Yup.string().required("Brand is required"),
     categoryId: Yup.string().required("Category is required"),
-    bannerImage: Yup.mixed().required("Banner image is required"),
+    bannerImage: Yup.object()
+      .shape({
+        url: Yup.mixed().required("Banner image is required"),
+        altText: Yup.string().required("Banner alt text is required"),
+        originalPath: Yup.string().required()
+      })
+      .required("Banner image is required"),
     bannerTitle: Yup.string().required("Banner title is required"),
     bannerContent: Yup.string().required("Banner content is required"),
   });
@@ -157,14 +256,22 @@ const AddProduct = () => {
     setLoader(true);
 
     const formData = new FormData();
-    selectedFiles.forEach((file) => {
+
+    // Append product images with alt texts and original paths
+    selectedFiles.forEach((file, index) => {
       formData.append("images", file);
+      formData.append("altTexts", altTexts[index] || "");
+      formData.append("originalPaths", file.name); // Using file name as placeholder
     });
-    
+
+    // Append banner image with alt text and original path
     if (bannerImage) {
       formData.append("bannerImage", bannerImage);
+      formData.append("bannerImageAltText", bannerAltText);
+      formData.append("bannerOriginalPath", bannerImage.name); // Using file name as placeholder
     }
-    
+
+    // Append other form values
     Object.keys(values).forEach((key) => {
       if (key !== "images" && key !== "bannerImage" && values[key] !== undefined && values[key] !== null && values[key] !== "" && key !== "brandId" && key !== "categoryId") {
         formData.append(key, values[key]);
@@ -181,10 +288,12 @@ const AddProduct = () => {
         resetForm();
         setPreviewImages([]);
         setSelectedFiles([]);
+        setAltTexts([]);
         setBrandId(null);
         setCategoryId(null);
         setBannerImage(null);
         setBannerPreview("");
+        setBannerAltText("");
         navigate("/products");
       } else {
         toast.error(response.data.message);
@@ -206,6 +315,11 @@ const AddProduct = () => {
         <Formik
           initialValues={{
             name: "",
+            slug: "",
+            metaTitle: "",
+            metaDescription: "",
+            keywords: "",
+            robots: "index, follow",
             actualPrice: "",
             description: "",
             size: "",
@@ -224,7 +338,7 @@ const AddProduct = () => {
               <div className="flex gap-5 justify-between flex-wrap">
                 <div className="w-[49%]">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
-                    Brand
+                    Category
                   </label>
                   <AsyncPaginate
                     value={brandId}
@@ -233,7 +347,7 @@ const AddProduct = () => {
                       handleChangeBrand(selectedOption);
                       setFieldValue("brandId", selectedOption?.value || "");
                     }}
-                    placeholder="Select brand..."
+                    placeholder="Select Category..."
                     additional={{ page: 1 }}
                     classNamePrefix="react-select"
                   />
@@ -243,10 +357,10 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
-                
+
                 <div className="md:w-[48%] w-full">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
-                    Category
+                    Sub Category
                   </label>
                   <AsyncPaginate
                     value={categoryId}
@@ -255,7 +369,7 @@ const AddProduct = () => {
                       handleChangeCategory(selectedOption);
                       setFieldValue("categoryId", selectedOption?.value || "");
                     }}
-                    placeholder="Select category..."
+                    placeholder="Select sub category..."
                     additional={{ page: 1 }}
                     classNamePrefix="react-select"
                   />
@@ -275,6 +389,12 @@ const AddProduct = () => {
                     type="text"
                     placeholder="Enter name"
                     className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      const generatedSlug = generateSlug(name);
+                      setFieldValue("name", name);
+                      setFieldValue("slug", generatedSlug);
+                    }}
                   />
                   <ErrorMessage
                     name="name"
@@ -282,6 +402,99 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
+
+
+                <div className="md:w-[48%] w-full">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Slug
+                  </label>
+                  <Field
+                    name="slug"
+                    type="text"
+                    placeholder="Enter slug"
+                    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    readOnly
+                  />
+                  <ErrorMessage
+                    name="slug"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
+
+              <div className="md:w-[48%] w-full">
+  <label className="block mb-2 text-sm font-medium text-gray-900">
+    Meta Title
+  </label>
+  <Field
+    name="metaTitle"
+    type="text"
+    placeholder="Enter Meta Title"
+    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+  />
+  <ErrorMessage
+    name="metaTitle"
+    component="div"
+    className="text-red text-sm mt-1"
+  />
+</div>
+
+<div className="md:w-[48%] w-full">
+  <label className="block mb-2 text-sm font-medium text-gray-900">
+    Meta Description
+  </label>
+  <Field
+    name="metaDescription"
+     as="textarea"
+                      rows={3}
+    type="text"
+    placeholder="Enter Meta Description"
+    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+  />
+  <ErrorMessage
+    name="metaDescription"
+    component="div"
+    className="text-red text-sm mt-1"
+  />
+</div>
+
+<div className="md:w-[48%] w-full">
+  <label className="block mb-2 text-sm font-medium text-gray-900">
+    Keywords
+  </label>
+  <Field
+    name="keywords"
+    type="text"
+    placeholder="Enter Keywords"
+    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+  />
+  <ErrorMessage
+    name="keywords"
+    component="div"
+    className="text-red text-sm mt-1"
+  />
+</div>
+
+  <div className="md:w-[48%] w-full">
+                    <label className="block mb-2 text-sm font-medium text-gray-900">
+                      Robots
+                    </label>
+                    <Field
+                      name="robots"
+                     
+                      className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                    />
+                     
+                    <ErrorMessage
+                      name="robots"
+                      component="div"
+                      className="text-red text-sm mt-1"
+                    />
+                  </div>
+
+
+                
+
 
                 <div className="md:w-[48%] w-full">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
@@ -316,7 +529,7 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
-                
+
                 <div className="w-[100%]">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
                     Upload Images (Max 5)
@@ -330,12 +543,25 @@ const AddProduct = () => {
                   />
                   <div className="flex flex-wrap gap-4 mt-3">
                     {previewImages.map((image, index) => (
-                      <div key={index} className="relative">
+                      <div key={index} className="relative w-64">
                         <img
                           src={image}
                           alt="Preview"
-                          className="w-24 h-24 object-cover rounded-md shadow-md"
+                          className="w-full h-48 object-contain rounded-md shadow-md"
                         />
+                        <div className="mt-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Alt Text
+                          </label>
+                          <input
+                            type="text"
+                            value={altTexts[index] || ''}
+                            onChange={(e) => handleAltTextChange(index, e.target.value, setFieldValue)}
+                            className="border w-full bg-lightGray py-2 px-2 rounded-md text-sm"
+                            placeholder={formatFileName(selectedFiles[index]?.name) || "Enter alt text"}
+                          />
+                        </div>
+
                         <button
                           type="button"
                           className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
@@ -370,7 +596,7 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
-              
+
 
                 <div className="w-[100%]">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
@@ -399,19 +625,35 @@ const AddProduct = () => {
                     className="block w-full p-3 text-sm text-gray-900 border rounded-md cursor-pointer focus:outline-none"
                   />
                   {bannerPreview && (
-                    <div className="relative h-48 w-48 mt-3">
-                      <img
-                        src={bannerPreview}
-                        alt="Banner Preview"
-                        className=" h-48 w-48 object-contain rounded-md shadow-md"
-                      />
-                      <button
-                        type="button"
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
-                        onClick={() => handleRemoveBanner(setFieldValue)}
-                      >
-                        <MdClose size={20} />
-                      </button>
+                    <div className="mt-3">
+                      <div className="relative h-48 w-48">
+                        <img
+                          src={bannerPreview}
+                          alt="Banner Preview"
+                          className="h-48 w-48 object-contain rounded-md shadow-md"
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1"
+                          onClick={() => handleRemoveBanner(setFieldValue)}
+                        >
+                          <MdClose size={20} />
+                        </button>
+                      </div>
+                      <div className="mt-2 w-48">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Banner Alt Text
+                        </label>
+                        <input
+                          type="text"
+                          value={bannerAltText || bannerImage?.name || ""}
+                          onChange={(e) => handleBannerAltTextChange(e.target.value, setFieldValue)}
+                          className="border w-full bg-lightGray py-2 px-2 rounded-md text-sm"
+                          placeholder="Enter banner alt text"
+
+                        />
+                      </div>
+
                     </div>
                   )}
                   <ErrorMessage
@@ -439,8 +681,6 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
-
-              
               </div>
 
               <div className="flex justify-center items-center mt-6">

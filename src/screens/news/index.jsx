@@ -91,7 +91,7 @@ const News = () => {
         setIsModalOpen={setIsUpdateOpen}
         isEditMode={!!editData}
         editData={editData}
-        fetchSizes={fetchSizes}
+        fetchBlogs={fetchSizes}
         
         />
 
