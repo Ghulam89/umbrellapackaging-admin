@@ -39,6 +39,8 @@ const AddSubCategory = ({
   const [subTitle, setSubTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoDescription, setVideoDescription] = useState("");
+  const [videoUpperHeading, setVideoUpperHeading] = useState("");
+  const [videoUpperDescription, setVideoUppperDescription] = useState("");
   const [icon, setIcon] = useState(null);
   const [iconPreview, setIconPreview] = useState("");
   const [image, setImage] = useState(null);
@@ -118,6 +120,8 @@ const AddSubCategory = ({
         setRobots(editData?.robots || "");
       setSubTitle(editData?.subTitle || "");
       setDescription(editData?.description || "");
+      setVideoUpperHeading(editData?.videoUpperHeading || "");
+      setVideoUppperDescription(editData?.videoUppperDescription || "");
       setVideoLink(editData?.videoLink || "");
       setVideoDescription(editData?.videoDescription || "");
       setBannerTitleFirst(editData?.bannerTitleFirst || "");
@@ -190,6 +194,8 @@ const AddSubCategory = ({
     setBannerImageFirst(null);
     setBannerImageFirstPreview("");
         setMetaTitle("")
+     setVideoUpperHeading("")
+     setVideoUppperDescription("")
      setMetaDescription("")
      setkeywords("")
      setRobots("");
@@ -269,6 +275,8 @@ const AddSubCategory = ({
       if (!isEditMode || robots !== editData?.robots) formData.append("robots", robots); 
     if (!isEditMode || subTitle !== editData?.subTitle) formData.append("subTitle", subTitle);
     if (!isEditMode || description !== editData?.description) formData.append("description", description);
+    if (!isEditMode || videoUpperHeading !== editData?.videoUpperHeading) formData.append("videoUpperHeading", videoUpperHeading);
+    if (!isEditMode || videoUpperDescription !== editData?.videoUpperDescription) formData.append("videoUpperDescription", videoUpperDescription);
     if (!isEditMode || videoLink !== editData?.videoLink) formData.append("videoLink", videoLink);
     if (!isEditMode || videoDescription !== editData?.videoDescription) formData.append("videoDescription", videoDescription);
     if (!isEditMode || bannerTitleFirst !== editData?.bannerTitleFirst) formData.append("bannerTitleFirst", bannerTitleFirst);
@@ -666,6 +674,34 @@ const AddSubCategory = ({
                 ) : (
                   <p className="mb-3 text-sm text-gray-500">No icon selected</p>
                 )}
+              </div>
+
+              <div className="w-full">
+                <Input
+                  label={"Video Upper Heading"}
+                  name={"videoUpperHeading"}
+                  value={videoUpperHeading}
+                  onChange={(e) => setVideoUpperHeading(e.target.value)}
+                  className={"border w-full py-3"}
+                  placeholder=""
+                  defaultValue={editData?.videoUpperHeading}
+                  required={true}
+                />
+              </div>
+
+              
+
+              <div className="w-full">
+                <label className="block mb-2 font-medium">Video Upper Description*</label>
+                <ReactQuill
+                  theme="snow"
+                  value={videoUpperDescription}
+                  onChange={setVideoUppperDescription}
+                  modules={modules}
+                  formats={formats}
+                  className="bg-white rounded-md"
+                  placeholder="Write your Video Upper Description here..."
+                />
               </div>
 
               <div className="w-full">
