@@ -32,8 +32,8 @@
     const [metaDescription, setMetaDescription] = useState(editData?.metaDescription || "");  
     const [keywords, setkeywords] = useState(editData?.keywords || "");  
     const [robots, setRobots] = useState(editData?.robots || "index, follow");  
-    const [image, setImage] = useState(editData?.image || null);
-    const [banner, setBanner] = useState(editData?.bannerImage || null);
+ const [image, setImage] = useState(editData?.image || null);
+const [banner, setBanner] = useState(editData?.bannerImage || null);
     const [bgColor, setBgColor] = useState(editData?.bgColor || "");
     const [slug, setSlug] = useState(editData?.slug || generateSlug(editData?.name || ""));
 
@@ -49,6 +49,9 @@
       setBgColor("");
       setSlug("");
       setContent("");
+      setMetaTitle("");
+      setMetaDescription("");
+      setkeywords("");
       setImageAltText("");
       setBannerAltText("");
     };
@@ -103,7 +106,7 @@
         
         setBanner(editData?.bannerImage ? `${Base_url}/${editData?.bannerImage}` : null);
       }
-    }, [isEditMode, editData, image, banner]);
+    }, [isEditMode, editData]);
 
     const handleBannerChange = (e) => {
       const file = e.target.files[0];
