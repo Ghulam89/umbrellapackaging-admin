@@ -106,9 +106,9 @@ const Reviews = () => {
                     Review  
                   
                   </th>
-                  {/* <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4">
                     Action
-                  </th> */}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -137,8 +137,8 @@ const Reviews = () => {
                        {item.review}
                      </span>
                    </td>
-                    {/* <td className="text-sm font-normal px-6 py-4">
-                      <div className="flex gap-2 justify-center items-center">
+                    <td className="text-sm font-normal px-6 py-4">
+                      <div className="">
                       
                         <img
                           onClick={() => removeFunction(item._id)}
@@ -147,7 +147,7 @@ const Reviews = () => {
                           className="cursor-pointer"
                         />
                       </div>
-                    </td> */}
+                    </td>
                   </tr>
                 ))}
               </tbody>

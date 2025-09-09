@@ -3,12 +3,11 @@ import { toast } from "react-toastify";
 import { Base_url } from "../../utils/Base_url";
 import axios from "axios";
 import Modal from "../../components/modal";
-import { MdClose } from "react-icons/md";
+import { MdClose, MdDelete } from "react-icons/md";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import React from "react";
+import JoditEditor from 'jodit-react';
+import { useRef } from 'react';
 
 const AddNews = ({
   isModalOpen,
@@ -19,7 +18,8 @@ const AddNews = ({
   editData = {},
 }) => {
 
-
+   console.log(editData);
+   
    const generateSlug = (title) => {
       return title
         .toLowerCase()
@@ -41,6 +41,7 @@ const [metaTitle, setMetaTitle] = useState(editData?.metaTitle || "");
     const [metaDescription, setMetaDescription] = useState(editData?.metaDescription || "");  
     const [keywords, setkeywords] = useState(editData?.keywords || "");  
     const [robots, setRobots] = useState(editData?.robots || "index, follow");  
+  const [qna, setQna] = useState(editData?.qna || [{ question: '', answer: '' }]);
   useEffect(() => {
     if (isEditMode && editData) {
        setMetaTitle(editData?.metaTitle || "");
@@ -53,7 +54,7 @@ const [metaTitle, setMetaTitle] = useState(editData?.metaTitle || "");
       setImage(editData.image ? `${Base_url}/${editData.image}` : null);
       setStatus(editData.status || "pending");
       setImageAltText(editData.imageAltText || "");
-      
+      setQna(editData.qna || [{ question: '', answer: '' }]);
     }
   }, [isEditMode, editData]);
 
@@ -106,7 +107,7 @@ const imageHandler = () => {
       });
       
       if (response.data.success===true) {
-        const quill = quillRef.current.getEditor();
+        const quill = editor.current.getEditor();
         const range = quill.getSelection();
         const imageUrl = response.data.url;
         const altText = response.data.alt || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
@@ -134,36 +135,15 @@ const imageHandler = () => {
 };
 
 
-  const quillRef = React.useRef(null);
+  const editor = useRef(null);
 
-  const modules = useMemo(() => ({
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['link', 'image'],
-        ['clean'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'align': [] }],
-      ],
-      handlers: {
-        image: imageHandler
-      }
-    },
-    clipboard: {
-      matchVisual: false,
-    }
-  }), []);
-
-   const formats = useMemo(() => [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'link', 'image',
-    'color', 'background',
-    'align'
-  ], []);
+  const handleQnAChange = (index, field, value) => {
+    const updatedQnA = [...qna];
+    updatedQnA[index][field] = value;
+    setQna(updatedQnA);
+  };
+  const addQnA = () => setQna([...qna, { question: '', answer: '' }]);
+  const removeQnA = (index) => setQna(qna.filter((_, i) => i !== index));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -189,6 +169,7 @@ const imageHandler = () => {
       if (!isEditMode || metaDescription !== editData?.metaDescription) formData.append("metaDescription", metaDescription);
       if (!isEditMode || keywords !== editData?.keywords) formData.append("keywords", keywords); 
       if (!isEditMode || robots !== editData?.robots) formData.append("robots", robots); 
+    formData.append("qna", JSON.stringify(qna));
     
     if (image && typeof image !== 'string') {
       formData.append("image", image);
@@ -339,6 +320,8 @@ const imageHandler = () => {
                                                 />
                                               </div>
 
+             
+
               {/* <div>
                 <Input
                   label="Short Description*"
@@ -403,17 +386,98 @@ const imageHandler = () => {
               <div>
                 <label className="block mb-2 font-medium">Content*</label>
                 <div className="bg-white rounded-md">
-                  <ReactQuill
-                    ref={quillRef}
-                    theme="snow"
+                  <JoditEditor
+                    ref={editor}
                     value={content}
-                    onChange={setContent}
-                    modules={modules}
-                    formats={formats}
-                    placeholder="Write your blog content here..."
-                    className="h-64 mb-12"
+                    tabIndex={1}
+                    onBlur={newContent => setContent(newContent)}
+                    onChange={() => {}}
+                    config={{
+                      readonly: false,
+                      toolbar: true,
+                      height: 400,
+                      buttons: [
+                        'bold', 'italic', 'underline', 'strikethrough', '|',
+                        'ul', 'ol', '|',
+                        'outdent', 'indent', '|',
+                        'font', 'fontsize', 'brush', 'paragraph', '|',
+                        'image', 'table', 'link', '|',
+                        'align', 'undo', 'redo', '|',
+                        'hr', 'eraser', 'copyformat', '|',
+                        'fullsize'
+                      ],
+                      events: {
+                        onImage: function () {
+                          const editorInstance = this;
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.click();
+                          input.onchange = async () => {
+                            const file = input.files[0];
+                            if (!file) return;
+                            try {
+                              setIsLoading(true);
+                              const formData = new FormData();
+                              formData.append('image', file);
+                              const response = await axios.post(`${Base_url}/blog/upload-editor-image`, formData, {
+                                headers: { 'Content-Type': 'multipart/form-data' }
+                              });
+                              if (response.data.success) {
+                                const imageUrl = response.data.url;
+                                const altText = response.data.alt || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+                                editorInstance.selection.insertHTML(
+                                  `<img src="${imageUrl}" alt="${altText}" loading="lazy" style="max-width:100%;height:auto;" />`
+                                );
+                              } else {
+                                toast.error(response.data.message || 'Failed to upload image');
+                              }
+                            } catch (error) {
+                              toast.error('Failed to upload image');
+                            } finally {
+                              setIsLoading(false);
+                            }
+                          };
+                          return false; // Prevent default
+                        }
+                      }
+                    }}
                   />
                 </div>
+              </div>
+
+
+              <div className="w-full">
+                <label className="block mb-2 font-medium">QnA (Question & Answer)</label>
+                {qna.map((item, idx) => (
+                  <div key={idx} className="flex border p-2 rounded-md  flex-col w-full gap-2 mb-2" >
+                    <Input
+                      label="Question"
+                      value={item.question}
+                      onChange={e => handleQnAChange(idx, 'question', e.target.value)}
+                      className="border p-2 w-full rounded-md flex-1"
+                      placeholder="Enter question"
+                      defaultValue={item.question}
+                    />
+                    <Input
+                      label="Answer"
+                      value={item.answer}
+                      onChange={e => handleQnAChange(idx, 'answer', e.target.value)}
+                      className="border p-2 w-full rounded-md flex-1"
+                      placeholder="Enter answer"
+                      defaultValue={item.answer}
+                    />
+                    <div>
+                    <button type="button" onClick={() => removeQnA(idx)} className="bg-red-300  border rounded-md p-1 font-bold px-2">
+                     <MdDelete size={20} className="" />
+                    </button>
+
+                    </div>
+                  </div>
+                ))}
+               <div className=" flex justify-end ">
+               <button type="button" onClick={addQnA} className=" bg-primary text-white px-3 py-1 rounded">Add Question</button>
+               </div>
               </div>
 
               

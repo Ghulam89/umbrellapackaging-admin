@@ -12,7 +12,6 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 const AddProduct = () => {
-
   const generateSlug = (title) => {
     return title
       .toLowerCase()
@@ -33,6 +32,7 @@ const AddProduct = () => {
   const [bannerPreview, setBannerPreview] = useState("");
   const [altTexts, setAltTexts] = useState([]);
   const [bannerAltText, setBannerAltText] = useState("");
+  
   const quillModules = {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
@@ -50,23 +50,29 @@ const AddProduct = () => {
     'link', 'image'
   ];
 
-  // Add this utility function at the top of your component
+  // Improved file name formatting function
   const formatFileName = (fileName) => {
     if (!fileName) return '';
-
-    return fileName
-      .replace(/\.[^/.]+$/, '')  // Remove file extension
-      .replace(/[_-]/g, ' ')     // Replace all underscores and dashes with spaces
-      .replace(/\s+/g, ' ')       // Collapse multiple spaces to single space
-      .trim()                    // Trim whitespace from both ends
-      .split(' ')                // Split into words
-      .map(word =>
-        word.length > 0
-          ? word[0].toUpperCase() + word.slice(1).toLowerCase()
-          : ''
-      )
-      .join(' ');                // Rejoin words with single spaces
+    
+    // Remove file extension
+    let formatted = fileName.replace(/\.[^/.]+$/, '');
+    
+    // Replace special characters with spaces
+    formatted = formatted.replace(/[_-]/g, ' ');
+    
+    // Remove any remaining special characters except spaces
+    formatted = formatted.replace(/[^\w\s]/gi, '');
+    
+    // Trim and capitalize each word
+    formatted = formatted
+      .trim()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+    
+    return formatted;
   };
+
   const loadOptions = async (searchQuery, loadedOptions, { page }) => {
     try {
       const response = await axios.get(`${Base_url}/brands/getAll`, {
@@ -142,14 +148,14 @@ const AddProduct = () => {
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setPreviewImages((prev) => [...prev, ...newPreviews]);
 
-    // Initialize alt texts with formatted file names
+    // Initialize alt texts with properly formatted file names
     const newAltTexts = [...altTexts, ...files.map(file => formatFileName(file.name))];
     setAltTexts(newAltTexts);
 
     // Update Formik field value
     setFieldValue("images", newFiles.map((file, index) => ({
       url: file,
-      altText: newAltTexts[index],
+      altText: newAltTexts[index] || formatFileName(file.name),
       originalPath: file.name
     })));
   };
@@ -159,10 +165,13 @@ const AddProduct = () => {
     if (file) {
       setBannerImage(file);
       setBannerPreview(URL.createObjectURL(file));
-      setBannerAltText(formatFileName(file.name));
+      const formattedAltText = formatFileName(file.name);
+      setBannerAltText(formattedAltText);
+      
+      // Update Formik field value
       setFieldValue("bannerImage", {
         url: file,
-        altText: formatFileName(file.name),
+        altText: formattedAltText,
         originalPath: file.name
       });
     }
@@ -183,7 +192,7 @@ const AddProduct = () => {
 
     setFieldValue("images", newFiles.map((file, i) => ({
       url: file,
-      altText: newAltTexts[i] || "",
+      altText: newAltTexts[i] || formatFileName(file.name),
       originalPath: file.name
     })));
   };
@@ -195,7 +204,7 @@ const AddProduct = () => {
 
     setFieldValue("images", selectedFiles.map((file, i) => ({
       url: file,
-      altText: newAltTexts[i] || "",
+      altText: newAltTexts[i] || formatFileName(file.name),
       originalPath: file.name
     })));
   };
@@ -203,11 +212,7 @@ const AddProduct = () => {
   const handleBannerAltTextChange = (value, setFieldValue) => {
     setBannerAltText(value);
     if (bannerImage) {
-      setFieldValue("bannerImage", {
-        url: bannerImage,
-        altText: value,
-        originalPath: bannerImage.name
-      });
+      setFieldValue("bannerImage.altText", value);
     }
   };
 
@@ -220,10 +225,10 @@ const AddProduct = () => {
 
   const validationSchema = Yup.object().shape({
     name: Yup.string().required("Name is required"),
-     metaTitle: Yup.string().required("Meta Title is required"),
-     metaDescription: Yup.string().required("Meta Description is required"),
-     keywords: Yup.string().required("Keywords is required"),
-    robots:Yup.string().required("Robots is required"),
+    metaTitle: Yup.string().required("Meta Title is required"),
+    metaDescription: Yup.string().required("Meta Description is required"),
+    keywords: Yup.string().required("Keywords is required"),
+    robots: Yup.string().required("Robots is required"),
     actualPrice: Yup.number()
       .required("Price is required")
       .positive("Price must be positive"),
@@ -257,18 +262,14 @@ const AddProduct = () => {
 
     const formData = new FormData();
 
-    // Append product images with alt texts and original paths
     selectedFiles.forEach((file, index) => {
       formData.append("images", file);
-      formData.append("altTexts", altTexts[index] || "");
-      formData.append("originalPaths", file.name); // Using file name as placeholder
+      formData.append("altTexts", altTexts[index] || formatFileName(file.name));
     });
 
-    // Append banner image with alt text and original path
     if (bannerImage) {
       formData.append("bannerImage", bannerImage);
-      formData.append("bannerImageAltText", bannerAltText);
-      formData.append("bannerOriginalPath", bannerImage.name); // Using file name as placeholder
+      formData.append("bannerImageAltText", bannerAltText || formatFileName(bannerImage.name));
     }
 
     // Append other form values
@@ -338,7 +339,7 @@ const AddProduct = () => {
               <div className="flex gap-5 justify-between flex-wrap">
                 <div className="w-[49%]">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
-                    Category
+                    Brand
                   </label>
                   <AsyncPaginate
                     value={brandId}
@@ -347,7 +348,7 @@ const AddProduct = () => {
                       handleChangeBrand(selectedOption);
                       setFieldValue("brandId", selectedOption?.value || "");
                     }}
-                    placeholder="Select Category..."
+                    placeholder="Select Brand..."
                     additional={{ page: 1 }}
                     classNamePrefix="react-select"
                   />
@@ -360,7 +361,7 @@ const AddProduct = () => {
 
                 <div className="md:w-[48%] w-full">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
-                    Sub Category
+                    Category
                   </label>
                   <AsyncPaginate
                     value={categoryId}
@@ -369,7 +370,7 @@ const AddProduct = () => {
                       handleChangeCategory(selectedOption);
                       setFieldValue("categoryId", selectedOption?.value || "");
                     }}
-                    placeholder="Select sub category..."
+                    placeholder="Select category..."
                     additional={{ page: 1 }}
                     classNamePrefix="react-select"
                   />
@@ -403,7 +404,6 @@ const AddProduct = () => {
                   />
                 </div>
 
-
                 <div className="md:w-[48%] w-full">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
                     Slug
@@ -413,7 +413,7 @@ const AddProduct = () => {
                     type="text"
                     placeholder="Enter slug"
                     className="border w-full bg-lightGray py-3 px-2 rounded-md"
-                    readOnly
+                    
                   />
                   <ErrorMessage
                     name="slug"
@@ -422,79 +422,77 @@ const AddProduct = () => {
                   />
                 </div>
 
-              <div className="md:w-[48%] w-full">
-  <label className="block mb-2 text-sm font-medium text-gray-900">
-    Meta Title
-  </label>
-  <Field
-    name="metaTitle"
-    type="text"
-    placeholder="Enter Meta Title"
-    className="border w-full bg-lightGray py-3 px-2 rounded-md"
-  />
-  <ErrorMessage
-    name="metaTitle"
-    component="div"
-    className="text-red text-sm mt-1"
-  />
-</div>
+                <div className="md:w-[48%] w-full">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Meta Title
+                  </label>
+                  <Field
+                    name="metaTitle"
+                    type="text"
+                    placeholder="Enter Meta Title"
+                    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                  />
+                  <ErrorMessage
+                    name="metaTitle"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
 
-<div className="md:w-[48%] w-full">
-  <label className="block mb-2 text-sm font-medium text-gray-900">
-    Meta Description
-  </label>
-  <Field
-    name="metaDescription"
-     as="textarea"
-                      rows={3}
-    type="text"
-    placeholder="Enter Meta Description"
-    className="border w-full bg-lightGray py-3 px-2 rounded-md"
-  />
-  <ErrorMessage
-    name="metaDescription"
-    component="div"
-    className="text-red text-sm mt-1"
-  />
-</div>
+                <div className="md:w-[48%] w-full">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Meta Description
+                  </label>
+                  <Field
+                    name="metaDescription"
+                    as="textarea"
+                    rows={3}
+                    type="text"
+                    placeholder="Enter Meta Description"
+                    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                  />
+                  <ErrorMessage
+                    name="metaDescription"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
 
-<div className="md:w-[48%] w-full">
-  <label className="block mb-2 text-sm font-medium text-gray-900">
-    Keywords
-  </label>
-  <Field
-    name="keywords"
-    type="text"
-    placeholder="Enter Keywords"
-    className="border w-full bg-lightGray py-3 px-2 rounded-md"
-  />
-  <ErrorMessage
-    name="keywords"
-    component="div"
-    className="text-red text-sm mt-1"
-  />
-</div>
+                <div className="md:w-[48%] w-full">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Keywords
+                  </label>
+                  <Field
+                    name="keywords"
+                    type="text"
+                    placeholder="Enter Keywords"
+                    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                  />
+                  <ErrorMessage
+                    name="keywords"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
 
-  <div className="md:w-[48%] w-full">
-                    <label className="block mb-2 text-sm font-medium text-gray-900">
-                      Robots
-                    </label>
-                    <Field
-                      name="robots"
-                     
-                      className="border w-full bg-lightGray py-3 px-2 rounded-md"
-                    />
-                     
-                    <ErrorMessage
-                      name="robots"
-                      component="div"
-                      className="text-red text-sm mt-1"
-                    />
-                  </div>
-
-
-                
-
+                <div className="md:w-[48%] w-full">
+                  <label className="block mb-2 text-sm font-medium text-gray-900">
+                    Robots
+                  </label>
+                  <Field
+                    name="robots"
+                    as="select"
+                    className="border w-full bg-lightGray py-3 px-2 rounded-md"
+                  >
+                    <option value="index, follow">index, follow</option>
+                    <option value="noindex, nofollow">noindex, nofollow</option>
+                  </Field>
+                  <ErrorMessage
+                    name="robots"
+                    component="div"
+                    className="text-red text-sm mt-1"
+                  />
+                </div>
 
                 <div className="md:w-[48%] w-full">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
@@ -555,7 +553,7 @@ const AddProduct = () => {
                           </label>
                           <input
                             type="text"
-                            value={altTexts[index] || ''}
+                            value={altTexts[index] || formatFileName(selectedFiles[index]?.name) || ''}
                             onChange={(e) => handleAltTextChange(index, e.target.value, setFieldValue)}
                             className="border w-full bg-lightGray py-2 px-2 rounded-md text-sm"
                             placeholder={formatFileName(selectedFiles[index]?.name) || "Enter alt text"}
@@ -596,7 +594,6 @@ const AddProduct = () => {
                     className="text-red text-sm mt-1"
                   />
                 </div>
-
 
                 <div className="w-[100%]">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
@@ -646,14 +643,12 @@ const AddProduct = () => {
                         </label>
                         <input
                           type="text"
-                          value={bannerAltText || bannerImage?.name || ""}
+                          value={bannerAltText || formatFileName(bannerImage?.name) || ""}
                           onChange={(e) => handleBannerAltTextChange(e.target.value, setFieldValue)}
                           className="border w-full bg-lightGray py-2 px-2 rounded-md text-sm"
-                          placeholder="Enter banner alt text"
-
+                          placeholder={formatFileName(bannerImage?.name) || "Enter banner alt text"}
                         />
                       </div>
-
                     </div>
                   )}
                   <ErrorMessage

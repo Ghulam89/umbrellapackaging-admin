@@ -13,6 +13,20 @@
     height: calc(100vh - 100px) !important; /* Adjust height as needed */
   }
 
+/* Table styling */
+.ql-editor table {
+    border-collapse: collapse;
+  }
+  
+  .ql-editor td, .ql-editor th {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .ql-editor th {
+    background-color: #f2f2f2;
+  }
+  
 /* Scrollbar Styling */
 .overflow-x-auto::-webkit-scrollbar {
     width: 5px;

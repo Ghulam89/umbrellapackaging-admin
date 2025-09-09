@@ -31,7 +31,7 @@ const Dashboard = () => {
       .get(`${Base_url}/category/getAll`)
       .then((res) => {
         console.log(res);
-        setCategory(res.data.totalCategory);
+        setCategory(res.data.totalItems);
       })
       .catch((error) => {
         console.log(error);

@@ -121,7 +121,7 @@ const AddSubCategory = ({
       setSubTitle(editData?.subTitle || "");
       setDescription(editData?.description || "");
       setVideoUpperHeading(editData?.videoUpperHeading || "");
-      setVideoUppperDescription(editData?.videoUppperDescription || "");
+      setVideoUppperDescription(editData?.videoUpperDescription || "");
       setVideoLink(editData?.videoLink || "");
       setVideoDescription(editData?.videoDescription || "");
       setBannerTitleFirst(editData?.bannerTitleFirst || "");

@@ -17,9 +17,15 @@ const EditProduct = () => {
   const [loading, setLoader] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
+
+
+  console.log(existingImages,'sdsd');
+  
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [brandId, setBrandId] = useState(null);
   const [categoryId, setCategoryId] = useState(null);
+  const [brandIds,setBrandIds] = useState(null)
+  const [categoryIds,setCategoryIds] = useState(null)
   const [bannerImage, setBannerImage] = useState(null);
   const [bannerPreview, setBannerPreview] = useState("");
   const [existingBanner, setExistingBanner] = useState("");
@@ -70,7 +76,7 @@ const EditProduct = () => {
     const fetchProductData = async () => {
       try {
         setLoader(true);
-        const response = await axios.get(`${Base_url}/products/get/${id}`);
+        const response = await axios.get(`${Base_url}/products/get?id=${id}`);
         const product = response.data.data;
 
         setInitialValues({
@@ -106,11 +112,19 @@ const EditProduct = () => {
           });
         }
 
+        if(brandIds){
+          setBrandIds(product.brandId._id)
+        }
+
         if (product.categoryId) {
           setCategoryId({
             value: product.categoryId._id,
             label: product.categoryId.title
           });
+        }
+
+ if(categoryIds){
+          setCategoryIds(product.categoryId._id)
         }
 
         // Initialize alt texts for existing images
@@ -310,30 +324,30 @@ const EditProduct = () => {
   };
 
   const validationSchema = Yup.object().shape({
-    name: Yup.string().required("Name is required"),
-    actualPrice: Yup.number()
-      .required("Price is required")
-      .positive("Price must be positive"),
-    size: Yup.string().required("Size is required"),
-    description: Yup.string().required("Description is required"),
-    bannerTitle: Yup.string().required("Banner title is required"),
-    bannerContent: Yup.string().required("Banner content is required"),
-    images: Yup.array()
-      .test(
-        "alt-text-required",
-        "Alt text is required for all images",
-        function (images) {
-          return altTexts.every(text => text && text.trim() !== "");
-        }
-      ),
-    bannerImage: Yup.object()
-      .test(
-        "banner-alt-text-required",
-        "Banner alt text is required",
-        function (value) {
-          return bannerImageAltText && bannerImageAltText.trim() !== "";
-        }
-      )
+    // name: Yup.string().required("Name is required"),
+    // actualPrice: Yup.number()
+    //   .required("Price is required")
+    //   .positive("Price must be positive"),
+    // size: Yup.string().required("Size is required"),
+    // description: Yup.string().required("Description is required"),
+    // bannerTitle: Yup.string().required("Banner title is required"),
+    // bannerContent: Yup.string().required("Banner content is required"),
+    // images: Yup.array()
+    //   .test(
+    //     "alt-text-required",
+    //     "Alt text is required for all images",
+    //     function (images) {
+    //       return altTexts.every(text => text && text.trim() !== "");
+    //     }
+    //   ),
+    // bannerImage: Yup.object()
+    //   .test(
+    //     "banner-alt-text-required",
+    //     "Banner alt text is required",
+    //     function (value) {
+    //       return bannerImageAltText && bannerImageAltText.trim() !== "";
+    //     }
+    //   )
   });
 
   const onSubmit = async (values, { resetForm }) => {
@@ -348,13 +362,16 @@ const EditProduct = () => {
     });
 
     // Append existing images alt texts
-    existingImages.forEach((img, index) => {
-      formData.append("existingImages", JSON.stringify({
-        url: img.url,
-        altText: altTexts[index] || formatFileName(img.originalPath),
-        originalPath: img.originalPath
-      }));
-    });
+if (existingImages?.length > 0) {
+  const existingImagesArray = existingImages.map((img, index) => ({
+    url: img.url,
+    altText: altTexts[index] || formatFileName(img.originalPath),
+    originalPath: img.originalPath,
+  }));
+
+  formData.append("existingImages", JSON.stringify(existingImagesArray));
+}
+
 
     // Append banner image
     if (bannerImage) {
@@ -378,12 +395,12 @@ const EditProduct = () => {
       }
     });
 
-    if (brandId && brandId.value !== initialValues.brandId) {
-      formData.append("brandId", brandId.value);
+    if (brandIds) {
+      formData.append("brandId", brandIds);
     }
 
-    if (categoryId && categoryId.value !== initialValues.categoryId) {
-      formData.append("categoryId", categoryId.value);
+    if (categoryIds) {
+      formData.append("categoryId", categoryIds);
     }
 
     try {
