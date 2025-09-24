@@ -64,6 +64,8 @@ function App() {
             <Route path="/featured_request" element={<FeaturedRequest />} />
           </Route>
         </Route>
+
+        {/* admin panel */}
       </Routes>
     </>
   );
