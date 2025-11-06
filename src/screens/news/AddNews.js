@@ -386,63 +386,80 @@ const imageHandler = () => {
               <div>
                 <label className="block mb-2 font-medium">Content*</label>
                 <div className="bg-white rounded-md">
-                  <JoditEditor
-                    ref={editor}
-                    value={content}
-                    tabIndex={1}
-                    onBlur={newContent => setContent(newContent)}
-                    onChange={() => {}}
-                    config={{
-                      readonly: false,
-                      toolbar: true,
-                      height: 400,
-                      buttons: [
-                        'bold', 'italic', 'underline', 'strikethrough', '|',
-                        'ul', 'ol', '|',
-                        'outdent', 'indent', '|',
-                        'font', 'fontsize', 'brush', 'paragraph', '|',
-                        'image', 'table', 'link', '|',
-                        'align', 'undo', 'redo', '|',
-                        'hr', 'eraser', 'copyformat', '|',
-                        'fullsize'
-                      ],
-                      events: {
-                        onImage: function () {
-                          const editorInstance = this;
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = 'image/*';
-                          input.click();
-                          input.onchange = async () => {
-                            const file = input.files[0];
-                            if (!file) return;
-                            try {
-                              setIsLoading(true);
-                              const formData = new FormData();
-                              formData.append('image', file);
-                              const response = await axios.post(`${Base_url}/blog/upload-editor-image`, formData, {
-                                headers: { 'Content-Type': 'multipart/form-data' }
-                              });
-                              if (response.data.success) {
-                                const imageUrl = response.data.url;
-                                const altText = response.data.alt || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
-                                editorInstance.selection.insertHTML(
-                                  `<img src="${imageUrl}" alt="${altText}" loading="lazy" style="max-width:100%;height:auto;" />`
-                                );
-                              } else {
-                                toast.error(response.data.message || 'Failed to upload image');
-                              }
-                            } catch (error) {
-                              toast.error('Failed to upload image');
-                            } finally {
-                              setIsLoading(false);
-                            }
-                          };
-                          return false; // Prevent default
-                        }
-                      }
-                    }}
-                  />
+<JoditEditor
+  ref={editor}
+  value={content}
+  tabIndex={1} 
+  onBlur={newContent => setContent(newContent)}
+  onChange={() => {}}
+  config={{
+    readonly: false,
+    toolbar: true,
+    height: 400,
+   uploader: {
+      url: `${Base_url}/blog/upload-editor-image`,
+      format: 'json',
+      method: 'POST',
+      insertImageAsBase64URI: false,
+      prepareData: function (formData) {
+        const newFormData = new FormData();
+        const files = this.jodit.ownerDocument.querySelector('input[type="file"]').files;
+        if (files && files.length) {
+          newFormData.append('image', files[0]);
+        }
+        return newFormData;
+      },
+      isSuccess: function (resp) {
+        return !resp.error;
+      },
+      getMessage: function (resp) {
+        return resp.message || '';
+      },
+      process: function (resp) {
+        if (!resp.url) {
+          return {
+            error: 1,
+            message: 'Upload failed'
+          };
+        }
+        return {
+          files: [`${Base_url}/${resp.url}`],
+          path: resp.url,
+          baseurl: Base_url,
+          error: 0,
+          message: ''
+        };
+      },
+      defaultHandlerSuccess: function (data) {
+        if (data.files && data.files.length) {
+          const alt = data.files[0].split('/').pop().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+          this.selection.insertImage(data.files[0], {
+            alt: alt,
+            loading: 'lazy',
+            style: {
+              maxWidth: '100%',
+              height: 'auto'
+            }
+          });
+        }
+      },
+      error: function (e) {
+        toast.error('Image upload failed');
+        console.error('Upload error:', e);
+      }
+    },
+    buttons: [
+      'bold', 'italic', 'underline', 'strikethrough', '|',
+      'ul', 'ol', '|',
+      'outdent', 'indent', '|',
+      'font', 'fontsize', 'brush', 'paragraph', '|',
+      'image', 'table', 'link', '|',
+      'align', 'undo', 'redo', '|',
+      'hr', 'eraser', 'copyformat', '|',
+      'fullsize'
+    ],
+  }}
+/>
                 </div>
               </div>
 
