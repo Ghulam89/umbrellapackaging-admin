@@ -430,9 +430,15 @@ const imageHandler = () => {
           message: ''
         };
       },
-      defaultHandlerSuccess: function (data) {
+      defaultHandlerSuccess: function (data, resp) {
         if (data.files && data.files.length) {
           const alt = data.files[0].split('/').pop().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+          const cursorPosition = this.selection.current();
+          
+          // Store current cursor position
+          const range = this.selection.range;
+          
+          // Insert image at cursor position
           this.selection.insertImage(data.files[0], {
             alt: alt,
             loading: 'lazy',
@@ -441,6 +447,12 @@ const imageHandler = () => {
               height: 'auto'
             }
           });
+          
+        
+          if (cursorPosition) {
+            this.selection.restore();
+            this.selection.setCursorAfter(this.editor.querySelector(`img[src="${data.files[0]}"]`));
+          }
         }
       },
       error: function (e) {
@@ -458,6 +470,7 @@ const imageHandler = () => {
       'hr', 'eraser', 'copyformat', '|',
       'fullsize'
     ],
+    
   }}
 />
                 </div>
