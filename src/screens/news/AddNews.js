@@ -402,10 +402,14 @@ const imageHandler = () => {
       method: 'POST',
       insertImageAsBase64URI: false,
       prepareData: function (formData) {
+       // return a new FormData that only contains 'image' with original filename
         const newFormData = new FormData();
-        const files = this.jodit.ownerDocument.querySelector('input[type="file"]').files;
-        if (files && files.length) {
-          newFormData.append('image', files[0]);
+        const input = this.jodit.ownerDocument.querySelector('input[type="file"]');
+        if (input && input.files && input.files[0]) {
+          const file = input.files[0];
+          newFormData.append('image', file, file.name);
+          // debug: open console and inspect form entries when testing
+          // for (let pair of newFormData.entries()) console.log(pair[0], pair[1]);
         }
         return newFormData;
       },
