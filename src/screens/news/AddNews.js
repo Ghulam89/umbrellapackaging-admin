@@ -402,19 +402,15 @@ const imageHandler = () => {
       method: 'POST',
       insertImageAsBase64URI: false,
       prepareData: function (formData) {
-       // return a new FormData that only contains 'image' with original filename
-        const newFormData = new FormData();
-        const input = this.jodit.ownerDocument.querySelector('input[type="file"]');
-        if (input && input.files && input.files[0]) {
-          const file = input.files[0];
-          newFormData.append('image', file, file.name);
-          // debug: open console and inspect form entries when testing
-          // for (let pair of newFormData.entries()) console.log(pair[0], pair[1]);
+        const file = formData.get('files[0]');
+        if (file) {
+          formData.delete('files[0]');
+          formData.append('image', file);
         }
-        return newFormData;
+        return formData;
       },
       isSuccess: function (resp) {
-        return !resp.error;
+        return !resp.error && resp.success;
       },
       getMessage: function (resp) {
         return resp.message || '';
@@ -427,7 +423,7 @@ const imageHandler = () => {
           };
         }
         return {
-          files: [`${Base_url}/${resp.url}`],
+          files: [resp.url.startsWith('http') ? resp.url : `${Base_url}/${resp.url}`],
           path: resp.url,
           baseurl: Base_url,
           error: 0,
