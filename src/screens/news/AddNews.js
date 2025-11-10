@@ -247,32 +247,7 @@ const imageHandler = () => {
         <div className="p-5">
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
-              <div>
-                <Input
-                  label="Title*"
-                  name="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="border w-full p-3 rounded-md"
-                  placeholder="Enter blog title"
-                  required
-                  defaultValue={title}
-                />
-              </div>
-
-               <div className="w-[100%]">
-                                <Input
-                                  label={"Slug"}
-                                  name={"slug"}
-                                  value={slug}
-                                  onChange={(e) => setSlug(generateSlug(e.target.value))}
-                                  className={"border w-full py-3"}
-                                  defaultValue={slug}
-                                  disabled={!isEditMode}
-                                />
-                              </div>
-
-
+              
                               <div className="w-[100%]">
                                                 <Input
                                                   label={"Meta Title"}
@@ -319,6 +294,32 @@ const imageHandler = () => {
                                                   defaultValue={robots}
                                                 />
                                               </div>
+              <div>
+                <Input
+                  label="Heading*"
+                  name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="border w-full p-3 rounded-md"
+                  placeholder="Enter blog heading"
+                  required
+                  defaultValue={title}
+                />
+              </div>
+
+               <div className="w-[100%]">
+                                <Input
+                                  label={"Slug"}
+                                  name={"slug"}
+                                  value={slug}
+                                  onChange={(e) => setSlug(generateSlug(e.target.value))}
+                                  className={"border w-full py-3"}
+                                  defaultValue={slug}
+                                  disabled={!isEditMode}
+                                />
+                              </div>
+
+
 
              
 
@@ -389,14 +390,14 @@ const imageHandler = () => {
 <JoditEditor
   ref={editor}
   value={content}
-  tabIndex={1} 
+  tabIndex={1}
   onBlur={newContent => setContent(newContent)}
   onChange={() => {}}
   config={{
     readonly: false,
     toolbar: true,
     height: 400,
-   uploader: {
+    uploader: {
       url: `${Base_url}/blog/upload-editor-image`,
       format: 'json',
       method: 'POST',
@@ -432,14 +433,14 @@ const imageHandler = () => {
       },
       defaultHandlerSuccess: function (data, resp) {
         if (data.files && data.files.length) {
+          const editor = this;
           const alt = data.files[0].split('/').pop().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
-          const cursorPosition = this.selection.current();
           
-          // Store current cursor position
-          const range = this.selection.range;
+          // Save current selection before inserting image
+          const currentSelection = editor.selection.save();
           
-          // Insert image at cursor position
-          this.selection.insertImage(data.files[0], {
+          // Insert image
+          editor.selection.insertImage(data.files[0], {
             alt: alt,
             loading: 'lazy',
             style: {
@@ -448,11 +449,10 @@ const imageHandler = () => {
             }
           });
           
-        
-          if (cursorPosition) {
-            this.selection.restore();
-            this.selection.setCursorAfter(this.editor.querySelector(`img[src="${data.files[0]}"]`));
-          }
+         
+          setTimeout(() => {
+            editor.selection.restore();
+          }, 100);
         }
       },
       error: function (e) {
@@ -470,7 +470,6 @@ const imageHandler = () => {
       'hr', 'eraser', 'copyformat', '|',
       'fullsize'
     ],
-    
   }}
 />
                 </div>
