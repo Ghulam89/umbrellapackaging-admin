@@ -14,7 +14,7 @@ const InstantQuote = () => {
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(6);
   const [search, setSearch] = useState("");
   useEffect(() => {
     fetchSizes();
