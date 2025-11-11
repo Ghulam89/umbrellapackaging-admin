@@ -14,7 +14,7 @@ const RequestQuote = () => {
   };
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [limit] = useState(15);
+  const [limit] = useState(10);
   const [search, setSearch] = useState("");
   useEffect(() => {
     fetchSizes();
@@ -27,7 +27,8 @@ const RequestQuote = () => {
       )
       .then((res) => {
         setUsers(res.data.data);
-        setTotalPages(res.data.totalPages);
+             setTotalPages(res.data.pagination.totalPages);
+
       })
       .catch((error) => {
         console.log(error);
