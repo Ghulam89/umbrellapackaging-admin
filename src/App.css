@@ -45,6 +45,11 @@
     background: #BC0000; 
 }
 
+.jodit-editor a{
+    color: blue !important;
+    /* text-decoration: underline !important; */
+}
+
 
 
 .card-container {
