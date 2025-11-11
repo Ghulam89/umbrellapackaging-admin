@@ -1,4 +1,4 @@
-import react,{ useEffect, useMemo, useState } from "react";
+import react, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { Base_url } from "../../utils/Base_url";
 import axios from "axios";
@@ -18,39 +18,39 @@ const AddNews = ({
   editData = {},
 }) => {
 
-   console.log(editData);
-   
-   const generateSlug = (title) => {
-      return title
-        .toLowerCase()
-        .replace(/\s+/g, '-')     // Replace spaces with -
-        .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-        .replace(/\-\-+/g, '-')   // Replace multiple - with single -
-        .replace(/^-+/, '')       // Trim - from start of text
-        .replace(/-+$/, '');      // Trim - from end of text
-    };
+  console.log(editData);
+
+  const generateSlug = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/\s+/g, '-')     // Replace spaces with -
+      .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+      .replace(/\-\-+/g, '-')   // Replace multiple - with single -
+      .replace(/^-+/, '')       // Trim - from start of text
+      .replace(/-+$/, '');      // Trim - from end of text
+  };
 
   const [isLoading, setIsLoading] = useState(false);
   const [imageAltText, setImageAltText] = useState(editData?.imageAltText || "");
   const [title, setTitle] = useState("");
-   const [slug, setSlug] = useState(editData?.slug || generateSlug(editData?.title || ""));
+  const [slug, setSlug] = useState(editData?.slug || generateSlug(editData?.title || ""));
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
   const [status, setStatus] = useState("pending");
-const [metaTitle, setMetaTitle] = useState(editData?.metaTitle || "");  
-    const [metaDescription, setMetaDescription] = useState(editData?.metaDescription || "");  
-    const [keywords, setkeywords] = useState(editData?.keywords || "");  
-    const [robots, setRobots] = useState(editData?.robots || "index, follow");  
+  const [metaTitle, setMetaTitle] = useState(editData?.metaTitle || "");
+  const [metaDescription, setMetaDescription] = useState(editData?.metaDescription || "");
+  const [keywords, setkeywords] = useState(editData?.keywords || "");
+  const [robots, setRobots] = useState(editData?.robots || "index, follow");
   const [qna, setQna] = useState(editData?.qna || [{ question: '', answer: '' }]);
   useEffect(() => {
     if (isEditMode && editData) {
-       setMetaTitle(editData?.metaTitle || "");
-        setMetaDescription(editData?.metaDescription || "");
-        setkeywords(editData?.keywords || "");
-        setRobots(editData?.robots || "");
+      setMetaTitle(editData?.metaTitle || "");
+      setMetaDescription(editData?.metaDescription || "");
+      setkeywords(editData?.keywords || "");
+      setRobots(editData?.robots || "");
       setTitle(editData.title || "");
-       setSlug(editData?.slug || generateSlug(editData?.title || ""));
-       setContent(editData.content || "");
+      setSlug(editData?.slug || generateSlug(editData?.title || ""));
+      setContent(editData.content || "");
       setImage(editData.image ? `${Base_url}/${editData.image}` : null);
       setStatus(editData.status || "pending");
       setImageAltText(editData.imageAltText || "");
@@ -72,67 +72,67 @@ const [metaTitle, setMetaTitle] = useState(editData?.metaTitle || "");
     setContent("");
     setImage(null);
     setStatus("pending");
-     setSlug("");
-     setMetaTitle("")
-     setMetaDescription("")
-     setkeywords("")
-     setRobots("");
+    setSlug("");
+    setMetaTitle("")
+    setMetaDescription("")
+    setkeywords("")
+    setRobots("");
     setImageAltText("");
-    
+
   };
 
-   useEffect(() => {
-      if (!isEditMode || !editData?.slug) {
-        setSlug(generateSlug(title));
-      }
-    }, [title, isEditMode, editData?.slug]);
+  useEffect(() => {
+    if (!isEditMode || !editData?.slug) {
+      setSlug(generateSlug(title));
+    }
+  }, [title, isEditMode, editData?.slug]);
 
-const imageHandler = () => {
-  const input = document.createElement('input');
-  input.setAttribute('type', 'file');
-  input.setAttribute('accept', 'image/*');
-  input.click();
-  
-  input.onchange = async () => {
-    const file = input.files[0];
-    if (!file) return;
-    
-    try {
-      setIsLoading(true);
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await axios.post(`${Base_url}/blog/upload-editor-image`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      if (response.data.success===true) {
-        const quill = editor.current.getEditor();
-        const range = quill.getSelection();
-        const imageUrl = response.data.url;
-        const altText = response.data.alt || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
-        
-        // Insert image with all required attributes
-        quill.clipboard.dangerouslyPasteHTML(
-          range.index,
-          `<img 
+  const imageHandler = () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      try {
+        setIsLoading(true);
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await axios.post(`${Base_url}/blog/upload-editor-image`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        if (response.data.success === true) {
+          const quill = editor.current.getEditor();
+          const range = quill.getSelection();
+          const imageUrl = response.data.url;
+          const altText = response.data.alt || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
+
+          // Insert image with all required attributes
+          quill.clipboard.dangerouslyPasteHTML(
+            range.index,
+            `<img 
             src="${imageUrl}" 
             alt="${altText}" 
             loading="lazy"
             style="max-width:100%;height:auto;"
           />`
-        );
-        
-        quill.setSelection(range.index + 1);
+          );
+
+          quill.setSelection(range.index + 1);
+        }
+      } catch (error) {
+        toast.error('Failed to upload image');
+        console.error('Image upload error:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      toast.error('Failed to upload image');
-      console.error('Image upload error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    };
   };
-};
 
 
   const editor = useRef(null);
@@ -165,12 +165,12 @@ const imageHandler = () => {
     // formData.append("shortDescription", shortDescription);
     formData.append("status", status);
     if (!isEditMode || slug !== editData?.slug) formData.append("slug", slug);
-      if (!isEditMode || metaTitle !== editData?.metaTitle) formData.append("metaTitle", metaTitle);
-      if (!isEditMode || metaDescription !== editData?.metaDescription) formData.append("metaDescription", metaDescription);
-      if (!isEditMode || keywords !== editData?.keywords) formData.append("keywords", keywords); 
-      if (!isEditMode || robots !== editData?.robots) formData.append("robots", robots); 
+    if (!isEditMode || metaTitle !== editData?.metaTitle) formData.append("metaTitle", metaTitle);
+    if (!isEditMode || metaDescription !== editData?.metaDescription) formData.append("metaDescription", metaDescription);
+    if (!isEditMode || keywords !== editData?.keywords) formData.append("keywords", keywords);
+    if (!isEditMode || robots !== editData?.robots) formData.append("robots", robots);
     formData.append("qna", JSON.stringify(qna));
-    
+
     if (image && typeof image !== 'string') {
       formData.append("image", image);
     }
@@ -204,27 +204,27 @@ const imageHandler = () => {
 
 
   const BlogContent = ({ content }) => {
-  // Ensure images always have alt text when rendering
-  const processedContent = useMemo(() => {
-    if (!content) return '';
-    
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
-    
-    doc.querySelectorAll('img').forEach(img => {
-      if (!img.alt) {
-        img.alt = img.src.split('/').pop()
-          .replace(/\.[^/.]+$/, "")
-          .replace(/[-_]/g, ' ')
-          .trim() || 'Product image';
-      }
-    });
-    
-    return doc.body.innerHTML;
-  }, [content]);
+    // Ensure images always have alt text when rendering
+    const processedContent = useMemo(() => {
+      if (!content) return '';
 
-  return <div dangerouslySetInnerHTML={{ __html: processedContent }} />;
-};
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'text/html');
+
+      doc.querySelectorAll('img').forEach(img => {
+        if (!img.alt) {
+          img.alt = img.src.split('/').pop()
+            .replace(/\.[^/.]+$/, "")
+            .replace(/[-_]/g, ' ')
+            .trim() || 'Product image';
+        }
+      });
+
+      return doc.body.innerHTML;
+    }, [content]);
+
+    return <div dangerouslySetInnerHTML={{ __html: processedContent }} />;
+  };
 
   return (
     <Modal isOpen={isModalOpen} onClose={closeModal} className={'rounded-md'}>
@@ -247,53 +247,53 @@ const imageHandler = () => {
         <div className="p-5">
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
-              
-                              <div className="w-[100%]">
-                                                <Input
-                                                  label={"Meta Title"}
-                                                  name={"metaTitle"}
-                                                  value={metaTitle}
-                                                  onChange={(e) => setMetaTitle(e.target.value)}
-                                                  className={"border w-full py-3"}
-                                                  defaultValue={metaTitle}
-                                                  disabled={!isEditMode}
-                                                />
-                                              </div>
-                                               <div className="w-[100%]">
-                                                <Input
-                                                  label={"Meta Description"}
-                                                  name={"metaDescription"}
-                                                  value={metaDescription}
-                                                  onChange={(e) => setMetaDescription(e.target.value)}
-                                                  className={"border w-full py-3"}
-                                                  defaultValue={metaDescription}
-                                                  disabled={!isEditMode}
-                                                />
-                                              </div>
-                              
-                                               <div className="w-[100%]">
-                                                <Input
-                                                  label={"Keywords"}
-                                                  name={"keywords"}
-                                                  value={keywords}
-                                                  onChange={(e) => setkeywords(e.target.value)}
-                                                  className={"border w-full py-3"}
-                                                  defaultValue={keywords}
-                                                  disabled={!isEditMode}
-                                                />
-                                              </div>
-                              
-                                               <div className="w-[100%]">
-                                                <Input
-                                                  label={"robots"}
-                                                  name={"robots"}
-                                                  value={robots}
-                                                  onChange={(e) => setRobots(e.target.value)}
-                                                  className={"border w-full py-3"}
-                                                  disabled={!isEditMode}
-                                                  defaultValue={robots}
-                                                />
-                                              </div>
+
+              <div className="w-[100%]">
+                <Input
+                  label={"Meta Title"}
+                  name={"metaTitle"}
+                  value={metaTitle}
+                  onChange={(e) => setMetaTitle(e.target.value)}
+                  className={"border w-full py-3"}
+                  defaultValue={metaTitle}
+                  disabled={!isEditMode}
+                />
+              </div>
+              <div className="w-[100%]">
+                <Input
+                  label={"Meta Description"}
+                  name={"metaDescription"}
+                  value={metaDescription}
+                  onChange={(e) => setMetaDescription(e.target.value)}
+                  className={"border w-full py-3"}
+                  defaultValue={metaDescription}
+                  disabled={!isEditMode}
+                />
+              </div>
+
+              <div className="w-[100%]">
+                <Input
+                  label={"Keywords"}
+                  name={"keywords"}
+                  value={keywords}
+                  onChange={(e) => setkeywords(e.target.value)}
+                  className={"border w-full py-3"}
+                  defaultValue={keywords}
+                  disabled={!isEditMode}
+                />
+              </div>
+
+              <div className="w-[100%]">
+                <Input
+                  label={"robots"}
+                  name={"robots"}
+                  value={robots}
+                  onChange={(e) => setRobots(e.target.value)}
+                  className={"border w-full py-3"}
+                  disabled={!isEditMode}
+                  defaultValue={robots}
+                />
+              </div>
               <div>
                 <Input
                   label="Heading*"
@@ -307,21 +307,21 @@ const imageHandler = () => {
                 />
               </div>
 
-               <div className="w-[100%]">
-                                <Input
-                                  label={"Slug"}
-                                  name={"slug"}
-                                  value={slug}
-                                  onChange={(e) => setSlug(generateSlug(e.target.value))}
-                                  className={"border w-full py-3"}
-                                  defaultValue={slug}
-                                  disabled={!isEditMode}
-                                />
-                              </div>
+              <div className="w-[100%]">
+                <Input
+                  label={"Slug"}
+                  name={"slug"}
+                  value={slug}
+                  onChange={(e) => setSlug(generateSlug(e.target.value))}
+                  className={"border w-full py-3"}
+                  defaultValue={slug}
+                  disabled={!isEditMode}
+                />
+              </div>
 
 
 
-             
+
 
               {/* <div>
                 <Input
@@ -357,7 +357,7 @@ const imageHandler = () => {
                     />
                   </label>
                 </div>
-                
+
                 {image ? (
                   <>
                     <div className="mb-3 border w-32 h-32 mt-4 rounded-md overflow-hidden">
@@ -375,7 +375,7 @@ const imageHandler = () => {
                         onChange={(e) => setImageAltText(e.target.value)}
                         className={"border w-full py-3"}
                         placeholder=""
-                         defaultValue={image?.name?.replace(/\.[^/.]+$/, "").replace(/-/g, ' ')||imageAltText}
+                        defaultValue={image?.name?.replace(/\.[^/.]+$/, "").replace(/-/g, ' ') || imageAltText}
                       />
                     </div>
                   </>
@@ -387,16 +387,23 @@ const imageHandler = () => {
               <div>
                 <label className="block mb-2 font-medium">Content*</label>
                 <div className="bg-white rounded-md">
-<JoditEditor
+                 <JoditEditor
   ref={editor}
   value={content}
   tabIndex={1}
-  onBlur={newContent => setContent(newContent)}
-  onChange={() => {}}
+  onBlur={(newContent) => {
+    // Only update on blur to prevent cursor issues
+    setContent(newContent);
+  }}
+  onChange={() => {}} // Keep empty - very important!
   config={{
     readonly: false,
     toolbar: true,
     height: 400,
+    askBeforePasteHTML: false,
+    askBeforePasteFromWord: false,
+    defaultActionOnPaste: 'insert_clear_html',
+    
     uploader: {
       url: `${Base_url}/blog/upload-editor-image`,
       format: 'json',
@@ -436,23 +443,24 @@ const imageHandler = () => {
           const editor = this;
           const alt = data.files[0].split('/').pop().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ');
           
-          // Save current selection before inserting image
-          const currentSelection = editor.selection.save();
+          // Save current scroll position
+          const scrollTop = editor.editor.scrollTop;
+          const scrollLeft = editor.editor.scrollLeft;
           
-          // Insert image
-          editor.selection.insertImage(data.files[0], {
-            alt: alt,
-            loading: 'lazy',
-            style: {
-              maxWidth: '100%',
-              height: 'auto'
-            }
+          // Focus the editor
+          editor.selection.focus();
+          
+          // Create the image HTML
+          const imgHTML = `<img src="${data.files[0]}" alt="${alt}" loading="lazy" style="max-width:100%;height:auto;" />`;
+          
+          // Insert at current cursor position
+          editor.selection.insertHTML(imgHTML);
+          
+          // Restore scroll position immediately
+          requestAnimationFrame(() => {
+            editor.editor.scrollTop = scrollTop;
+            editor.editor.scrollLeft = scrollLeft;
           });
-          
-         
-          setTimeout(() => {
-            editor.selection.restore();
-          }, 100);
         }
       },
       error: function (e) {
@@ -460,6 +468,16 @@ const imageHandler = () => {
         console.error('Upload error:', e);
       }
     },
+    
+    events: {
+      // Don't update state on every change - only on blur
+      // This prevents cursor issues
+      afterInit: function(editor) {
+        // Store reference to prevent re-renders
+        window.joditInstance = editor;
+      }
+    },
+    
     buttons: [
       'bold', 'italic', 'underline', 'strikethrough', '|',
       'ul', 'ol', '|',
@@ -497,19 +515,19 @@ const imageHandler = () => {
                       defaultValue={item.answer}
                     />
                     <div>
-                    <button type="button" onClick={() => removeQnA(idx)} className="bg-red-300  border rounded-md p-1 font-bold px-2">
-                     <MdDelete size={20} className="" />
-                    </button>
+                      <button type="button" onClick={() => removeQnA(idx)} className="bg-red-300  border rounded-md p-1 font-bold px-2">
+                        <MdDelete size={20} className="" />
+                      </button>
 
                     </div>
                   </div>
                 ))}
-               <div className=" flex justify-end ">
-               <button type="button" onClick={addQnA} className=" bg-primary text-white px-3 py-1 rounded">Add Question</button>
-               </div>
+                <div className=" flex justify-end ">
+                  <button type="button" onClick={addQnA} className=" bg-primary text-white px-3 py-1 rounded">Add Question</button>
+                </div>
               </div>
 
-              
+
             </div>
 
             <Button
@@ -522,11 +540,10 @@ const imageHandler = () => {
               )}
               type="submit"
               disabled={isLoading}
-              className={`mt-6 w-full py-3 rounded-md ${
-                isLoading
+              className={`mt-6 w-full py-3 rounded-md ${isLoading
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-primary hover:bg-blue-700"
-              } text-white font-medium`}
+                } text-white font-medium`}
             />
           </form>
         </div>
