@@ -246,15 +246,15 @@ const AddProduct = () => {
       ),
     brandId: Yup.string().required("Brand is required"),
     categoryId: Yup.string().required("Category is required"),
-    bannerImage: Yup.object()
-      .shape({
-        url: Yup.mixed().required("Banner image is required"),
-        altText: Yup.string().required("Banner alt text is required"),
-        originalPath: Yup.string().required()
-      })
-      .required("Banner image is required"),
-    bannerTitle: Yup.string().required("Banner title is required"),
-    bannerContent: Yup.string().required("Banner content is required"),
+    // bannerImage: Yup.object()
+    //   .shape({
+    //     url: Yup.mixed().required("Banner image is required"),
+    //     altText: Yup.string().required("Banner alt text is required"),
+    //     originalPath: Yup.string().required()
+    //   })
+    //   .required("Banner image is required"),
+    // bannerTitle: Yup.string().required("Banner title is required"),
+    // bannerContent: Yup.string().required("Banner content is required"),
   });
 
   const onSubmit = async (values, { resetForm }) => {
@@ -595,7 +595,7 @@ const AddProduct = () => {
                   />
                 </div>
 
-                <div className="w-[100%]">
+                {/* <div className="w-[100%]">
                   <label className="block mb-2 text-sm font-medium text-gray-900">
                     Banner Title
                   </label>
@@ -675,7 +675,7 @@ const AddProduct = () => {
                     component="div"
                     className="text-red text-sm mt-1"
                   />
-                </div>
+                </div> */}
               </div>
 
               <div className="flex justify-center items-center mt-6">

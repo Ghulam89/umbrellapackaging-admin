@@ -749,7 +749,7 @@ if (existingImages?.length > 0) {
                   </div>
 
                   {/* Banner Title */}
-                  <div className="w-[100%]">
+                  {/* <div className="w-[100%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Banner Title
                     </label>
@@ -764,10 +764,10 @@ if (existingImages?.length > 0) {
                       component="div"
                       className="text-red text-sm mt-1"
                     />
-                  </div>
+                  </div> */}
 
                   {/* Banner Image */}
-                  <div className="w-[100%]">
+                  {/* <div className="w-[100%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Banner Image
                     </label>
@@ -820,10 +820,10 @@ if (existingImages?.length > 0) {
                       component="div"
                       className="text-red text-sm mt-1"
                     />
-                  </div>
+                  </div> */}
 
                   {/* Banner Content */}
-                  <div className="w-[100%]">
+                  {/* <div className="w-[100%]">
                     <label className="block mb-2 text-sm font-medium text-gray-900">
                       Banner Content
                     </label>
@@ -840,7 +840,7 @@ if (existingImages?.length > 0) {
                       component="div"
                       className="text-red text-sm mt-1"
                     />
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Submit Button */}
