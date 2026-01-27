@@ -25,7 +25,7 @@ const ContactUs = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/contactus/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/contactus/getAll?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         console.log(res);
         
@@ -92,50 +92,50 @@ const ContactUs = () => {
       </div>
       <section className="mb-20 mt-5 text-gray-800">
         <div className="block rounded-lg shadow-lg bg-white">
-          <div className="overflow-x-auto">
-            <table className="min-w-full mb-0">
+          <div className="overflow-x-scroll overflow-y-visible w-full">
+            <table className="min-w-full mb-0" style={{ minWidth: '1400px' }}>
               <thead className="bg-primary rounded-lg">
                 <tr>
-                  <th className="text-sm text-white font-bold px-6 py-4">No</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Name</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Email</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Phone Number</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Company Name</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Image</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Message</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Page URL</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Device</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">IP Address</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Action</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">No</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Name</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Email</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Phone Number</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Company Name</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Image</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Message</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Page URL</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Device</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">IP Address</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {users?.map((item, index) => (
                   <tr key={item._id || item.id} className="bg-white text-center border-b">
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.name || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.email || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.phoneNumber || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.companyName || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       {item?.image ? (
                         <div className="w-16 h-16 mx-auto">
                           <img 
@@ -148,39 +148,39 @@ const ContactUs = () => {
                         <span className="text-gray-400">No image</span>
                       )}
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate block mx-auto">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate inline-block">
                         {item.message || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate block mx-auto">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate inline-block">
                         {item.pageUrl || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate block mx-auto">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate inline-block">
                         {item.device || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.ip || '-'}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2 justify-center items-center">
                         <img
                           onClick={() => handleEdit(item)}
                           src={require("../../assets/image/edit.png")}
                           alt="Edit"
-                          className="cursor-pointer"
+                          className="cursor-pointer w-6 h-6"
                         />
                         <img
                           onClick={() => removeFunction(item._id || item.id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
-                          className="cursor-pointer"
+                          className="cursor-pointer w-6 h-6"
                         />
                       </div>
                     </td>

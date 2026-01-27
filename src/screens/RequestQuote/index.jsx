@@ -89,15 +89,15 @@ const RequestQuote = () => {
       </div>
       <section className="mb-20 mt-5 text-gray-800">
         <div className="block rounded-lg shadow-lg bg-white">
-          <div className="overflow-x-scroll">
-            <table className="min-w-full mb-0">
+          <div className="overflow-x-scroll overflow-y-visible w-full">
+            <table className="min-w-full mb-0" style={{ minWidth: '1800px' }}>
               <thead className="bg-primary rounded-lg">
                 <tr>
-                  <th className="text-sm text-white font-bold px-6 py-4">No</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">No</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                     Name
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                     Email
                   </th>
                   <th className="text-sm whitespace-nowrap text-white font-bold px-6 py-4">
@@ -112,37 +112,46 @@ const RequestQuote = () => {
                   <th className="text-sm whitespace-nowrap text-white font-bold px-6 py-4">
                   Box Style
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Length
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Width
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Depth
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Unit
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Quantity
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Stock
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Color
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Printing Sides
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Addons
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                   Message
                   </th>
-                  <th className="text-sm text-white font-bold px-6 py-4">
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
+                  Page URL
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
+                  Device
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
+                  IP Address
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                     Action
                   </th>
                 </tr>
@@ -150,31 +159,31 @@ const RequestQuote = () => {
               <tbody>
                 {users?.map((item, index) => (
                   <tr key={item.id} className="bg-white text-center border-b">
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.name}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.email}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.phoneNumber}
                       </span>
                     </td>
                    
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.companyName}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       {item?.image?
                       <div  className=" w-16 h-16">
                       <img  src={`${Base_url}/${item?.image}`} className=" rounded-md w-full h-full object-cover" alt="" />
@@ -182,70 +191,85 @@ const RequestQuote = () => {
                         <img  src={require('../../assets/image/profile.jpg')} className=" rounded-md w-full h-full object-cover" alt="" />
                       </div>}
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.boxStyle}
                       </span>
                     </td>
                    
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.length}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.width}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.depth}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.unit}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.quantity}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.stock}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.color}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.printingSides}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.addons}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
-                      <span className="text-base whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base  text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.message}
                       </span>
                     </td>
-                    <td className="text-sm font-normal px-6 py-4">
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base  whitespace-nowrap text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate inline-block">
+                        {item.pageUrl || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate inline-block">
+                        {item.device || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {item.ip || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2 justify-center items-center">
                         
                         <img
                           onClick={() => removeFunction(item._id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
-                          className="cursor-pointer"
+                          className="cursor-pointer w-6 h-6"
                         />
                       </div>
                     </td>
