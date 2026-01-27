@@ -25,7 +25,7 @@ const ContactUs = () => {
 
   const fetchSizes = () => {
     axios
-      .get(`${Base_url}/contact/get?page=${currentPage}&limit=${limit}&search=${search}`)
+      .get(`${Base_url}/contactus/get?page=${currentPage}&limit=${limit}&search=${search}`)
       .then((res) => {
         console.log(res);
         
@@ -60,7 +60,7 @@ const ContactUs = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`${Base_url}/contact/delete/${id}`)
+          .delete(`${Base_url}/contactus/delete/${id}`)
           .then((res) => {
             if (res.status === 200) {
               Swal.fire("Deleted!", "Your file has been deleted.", "success");
@@ -97,50 +97,87 @@ const ContactUs = () => {
               <thead className="bg-primary rounded-lg">
                 <tr>
                   <th className="text-sm text-white font-bold px-6 py-4">No</th>
-                  <th className="text-sm text-white font-bold px-6 py-4">Username</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Name</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Email</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Phone Number</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Company Name</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Image</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Message</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Page URL</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">Device</th>
+                  <th className="text-sm text-white font-bold px-6 py-4">IP Address</th>
                   <th className="text-sm text-white font-bold px-6 py-4">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {users?.map((item, index) => (
-                  <tr key={item.id} className="bg-white text-center border-b">
+                  <tr key={item._id || item.id} className="bg-white text-center border-b">
                     <td className="text-sm font-normal px-6 py-4">
                       {index + 1 + (currentPage - 1) * limit}
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.fullName}
+                        {item.name || '-'}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.email}
+                        {item.email || '-'}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.phone}
+                        {item.phoneNumber || '-'}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
-                        {item.comment}
+                        {item.companyName || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      {item?.image ? (
+                        <div className="w-16 h-16 mx-auto">
+                          <img 
+                            src={`${Base_url}/${item.image}`} 
+                            className="rounded-md w-full h-full object-cover" 
+                            alt="Contact" 
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">No image</span>
+                      )}
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate block mx-auto">
+                        {item.message || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate block mx-auto">
+                        {item.pageUrl || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full max-w-xs truncate block mx-auto">
+                        {item.device || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {item.ip || '-'}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4">
                       <div className="flex gap-2 justify-center items-center">
                         <img
-                             onClick={() => handleEdit(item)}
-
+                          onClick={() => handleEdit(item)}
                           src={require("../../assets/image/edit.png")}
                           alt="Edit"
                           className="cursor-pointer"
                         />
                         <img
-                          onClick={() => removeFunction(item.id)}
+                          onClick={() => removeFunction(item._id || item.id)}
                           src={require("../../assets/image/del.png")}
                           alt="Delete"
                           className="cursor-pointer"
