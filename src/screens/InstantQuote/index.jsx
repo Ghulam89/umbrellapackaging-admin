@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { Base_url } from "../../utils/Base_url";
 import { FaSearch } from "react-icons/fa";
 import Input from "../../components/Input";
+import moment from "moment";
 const InstantQuote = () => {
   const [users, setUsers] = useState([]);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -119,6 +120,9 @@ const InstantQuote = () => {
                   IP Address
                   </th>
                   <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
+                  Date
+                  </th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">
                     Action
                   </th>
                 </tr>
@@ -172,6 +176,11 @@ const InstantQuote = () => {
                     <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.ip || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
+                        {moment(item.createdAt).format('DD/MM/YYYY HH:mm') || '-'}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">

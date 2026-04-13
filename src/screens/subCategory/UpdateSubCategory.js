@@ -77,7 +77,7 @@ const UpdateSubCategory = ({
               <div className="w-[100%]">
                  <label className="block mb-2 text-sm font-medium  text-gray-900">Categories</label>
                  <select   defaultValue={singleUser?.categoryId?.title || ""} name="categoryId" className="outline-none bg-lightGray  w-full border p-2.5 text-black placeholder:text-black rounded-md ">
-                    <option selected>select categories</option>
+                    <option value="">select categories</option>
                     {category?.map((item,index)=>{
                         return (
                             <option value={item?._id}>{item?.title}</option>
