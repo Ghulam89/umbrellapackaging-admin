@@ -7,6 +7,12 @@ import { Base_url } from "../../utils/Base_url";
 import { FaSearch } from "react-icons/fa";
 import Input from "../../components/Input";
 
+const formatCreatedAt = (value) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? "-" : d.toLocaleString();
+};
+
 const ContactUs = () => {
     const [users, setUsers] = useState([]);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -93,7 +99,7 @@ const ContactUs = () => {
       <section className="mb-20 mt-5 text-gray-800">
         <div className="block rounded-lg shadow-lg bg-white">
           <div className="overflow-x-scroll overflow-y-visible w-full">
-            <table className="min-w-full mb-0" style={{ minWidth: '1400px' }}>
+            <table className="min-w-full mb-0" style={{ minWidth: '1580px' }}>
               <thead className="bg-primary rounded-lg">
                 <tr>
                   <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">No</th>
@@ -106,6 +112,7 @@ const ContactUs = () => {
                   <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Page URL</th>
                   <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Device</th>
                   <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">IP Address</th>
+                  <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Created at</th>
                   <th className="text-sm text-white font-bold px-6 py-4 whitespace-nowrap">Action</th>
                 </tr>
               </thead>
@@ -166,6 +173,11 @@ const ContactUs = () => {
                     <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
                       <span className="text-base text-black bg-green-200 py-1 px-2.5 rounded-full">
                         {item.ip || '-'}
+                      </span>
+                    </td>
+                    <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-black">
+                        {formatCreatedAt(item.createdAt)}
                       </span>
                     </td>
                     <td className="text-sm font-normal px-6 py-4 whitespace-nowrap">

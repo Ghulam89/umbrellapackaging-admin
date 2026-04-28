@@ -16,7 +16,7 @@ const getBaseUrl = () => {
   }
   
   // Default to production
-  return 'https://umbrellapackaging.com';
+  return 'http://localhost:8000';
 };
 
 export const Base_url = getBaseUrl();
